@@ -1,0 +1,9 @@
+# TypeScript workspace members. packages/protocol is Python-only (uv workspace);
+# apps/admin is deferred (empty placeholder this increment).
+packages:
+  - "packages/shared-types"
+  - "packages/sync-engine"
+  - "apps/web"
+  - "extensions/vscode"
+  - "tests/e2e"
+  - "tests/load"

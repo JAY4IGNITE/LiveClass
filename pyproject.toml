@@ -1,0 +1,54 @@
+[project]
+name = "liveclass"
+version = "0.0.0"
+description = "LiveClass IDE — real-time programming classroom backend (uv workspace root)"
+requires-python = ">=3.12"
+dependencies = [
+  "liveclass-protocol",
+  "liveclass-api",
+  "liveclass-collab",
+]
+
+[tool.uv.workspace]
+members = ["services/api", "services/collaboration", "packages/protocol"]
+
+[tool.uv.sources]
+liveclass-protocol = { workspace = true }
+liveclass-api = { workspace = true }
+liveclass-collab = { workspace = true }
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "httpx>=0.28",
+  "websockets>=14",
+  "ruff>=0.8",
+  "datamodel-code-generator>=0.26",
+  "jsonschema>=4.23",
+  "psutil>=6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+markers = [
+  "integration: requires Postgres/Redis (docker compose up --wait)",
+  "websocket: exercises the live WebSocket gateway (subset of integration)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Generated code is not hand-maintained; the codegen drift gate guards it instead.
+extend-exclude = [
+  "packages/protocol/src/liveclass_protocol/models.py",
+  "services/api/migrations/versions",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["liveclass_protocol", "liveclass_api", "liveclass_collab"]

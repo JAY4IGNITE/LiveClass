@@ -1,0 +1,764 @@
+/* AUTO-GENERATED copy of packages/protocol/schemas/messages.schema.json. DO NOT EDIT. */
+export const messageSchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://liveclass.dev/schemas/messages.schema.json",
+  "title": "Message",
+  "description": "LiveClass IDE wire protocol — single source of truth. Pydantic and TS types are generated from this file; message shapes are never hand-written elsewhere.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Connect"
+    },
+    {
+      "$ref": "#/$defs/ConnectAck"
+    },
+    {
+      "$ref": "#/$defs/Join"
+    },
+    {
+      "$ref": "#/$defs/Welcome"
+    },
+    {
+      "$ref": "#/$defs/DocChange"
+    },
+    {
+      "$ref": "#/$defs/Ack"
+    },
+    {
+      "$ref": "#/$defs/DocUpdate"
+    },
+    {
+      "$ref": "#/$defs/ResyncRequest"
+    },
+    {
+      "$ref": "#/$defs/Snapshot"
+    },
+    {
+      "$ref": "#/$defs/PresenceUpdate"
+    },
+    {
+      "$ref": "#/$defs/Ping"
+    },
+    {
+      "$ref": "#/$defs/Pong"
+    },
+    {
+      "$ref": "#/$defs/SessionClosed"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    },
+    {
+      "$ref": "#/$defs/Checkpoint"
+    }
+  ],
+  "$defs": {
+    "ProtocolVersion": {
+      "const": "1.0"
+    },
+    "Uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "Version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "EpochMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Role": {
+      "type": "string",
+      "enum": [
+        "instructor",
+        "student"
+      ]
+    },
+    "IdeType": {
+      "type": "string",
+      "enum": [
+        "vscode",
+        "headless",
+        "web",
+        "other"
+      ]
+    },
+    "PresenceState": {
+      "type": "string",
+      "enum": [
+        "joined",
+        "left"
+      ]
+    },
+    "SessionCloseReason": {
+      "type": "string",
+      "enum": [
+        "ended",
+        "paused",
+        "teacher_disconnected"
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "PROTOCOL_MISMATCH",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "INVALID_MESSAGE",
+        "UNKNOWN_SESSION",
+        "UNKNOWN_DOCUMENT",
+        "STALE_VERSION",
+        "INVALID_VERSION",
+        "DUPLICATE_OP",
+        "RATE_LIMITED",
+        "INTERNAL"
+      ]
+    },
+    "Edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offset",
+        "length",
+        "text"
+      ],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTF-16 code-unit offset into the base document"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTF-16 code units to delete at offset"
+        },
+        "text": {
+          "type": "string",
+          "description": "replacement text inserted at offset"
+        }
+      }
+    },
+    "ClientInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ideType",
+        "clientVersion"
+      ],
+      "properties": {
+        "ideType": {
+          "$ref": "#/$defs/IdeType"
+        },
+        "clientVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxMsgBytes",
+        "msgsPerSec"
+      ],
+      "properties": {
+        "maxMsgBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "msgsPerSec": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "DocumentDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "relativePath",
+        "version"
+      ],
+      "properties": {
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "relativePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        }
+      }
+    },
+    "SnapshotData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "version",
+        "content"
+      ],
+      "properties": {
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "PresenceMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "role",
+        "state",
+        "since"
+      ],
+      "properties": {
+        "userId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "state": {
+          "$ref": "#/$defs/PresenceState"
+        },
+        "since": {
+          "$ref": "#/$defs/EpochMs"
+        }
+      }
+    },
+    "ResumeEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "lastVersion"
+      ],
+      "properties": {
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "lastVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      }
+    },
+    "Envelope": {
+      "type": "object",
+      "description": "Fields common to every message. sessionId/role are never trusted for authorization — the server resolves them.",
+      "required": [
+        "protocol",
+        "type",
+        "msgId",
+        "ts"
+      ],
+      "properties": {
+        "protocol": {
+          "$ref": "#/$defs/ProtocolVersion"
+        },
+        "type": {
+          "type": "string"
+        },
+        "msgId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "ts": {
+          "$ref": "#/$defs/EpochMs"
+        },
+        "sessionId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        }
+      }
+    },
+    "Connect": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "connect"
+        },
+        "token": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clientInfo": {
+          "$ref": "#/$defs/ClientInfo"
+        }
+      },
+      "required": [
+        "type",
+        "token",
+        "clientInfo"
+      ],
+      "unevaluatedProperties": false
+    },
+    "ConnectAck": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "connect_ack"
+        },
+        "userId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "serverTime": {
+          "$ref": "#/$defs/EpochMs"
+        },
+        "heartbeatIntervalMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        }
+      },
+      "required": [
+        "type",
+        "userId",
+        "role",
+        "serverTime",
+        "heartbeatIntervalMs",
+        "limits"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Join": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "join"
+        },
+        "sessionId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "resume": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeEntry"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "sessionId"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Welcome": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "welcome"
+        },
+        "sessionId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "mode": {
+          "const": "observe"
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentDescriptor"
+          }
+        },
+        "presence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PresenceMember"
+          }
+        },
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SnapshotData"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "sessionId",
+        "role",
+        "mode",
+        "documents",
+        "presence"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DocChange": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "doc_change"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "baseVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "clientOpId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/Edit"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "baseVersion",
+        "clientOpId",
+        "edits"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Ack": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "ack"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "clientOpId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "status": {
+          "const": "applied"
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "clientOpId",
+        "version",
+        "status"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DocUpdate": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "doc_update"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "baseVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/Edit"
+          }
+        },
+        "originOpId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "authorUserId": {
+          "$ref": "#/$defs/Uuid"
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "version",
+        "baseVersion",
+        "edits",
+        "originOpId",
+        "authorUserId"
+      ],
+      "unevaluatedProperties": false
+    },
+    "ResyncRequest": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "resync_request"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "fromVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "fromVersion"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Snapshot": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "snapshot"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "version",
+        "content"
+      ],
+      "unevaluatedProperties": false
+    },
+    "PresenceUpdate": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "presence_update"
+        },
+        "sessionId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PresenceMember"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "sessionId",
+        "members"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Ping": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "ping"
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "nonce"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Pong": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "pong"
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "nonce"
+      ],
+      "unevaluatedProperties": false
+    },
+    "SessionClosed": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "session_closed"
+        },
+        "reason": {
+          "$ref": "#/$defs/SessionCloseReason"
+        },
+        "final": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "reason",
+        "final"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "error"
+        },
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "message": {
+          "type": "string"
+        },
+        "relatedMsgId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "currentVersion": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "required": [
+        "type",
+        "code",
+        "message"
+      ],
+      "unevaluatedProperties": false
+    },
+    "Checkpoint": {
+      "type": "object",
+      "description": "Teacher-uploaded full-document checkpoint (the opaque server never derives content itself).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "checkpoint"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "version",
+        "content"
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+} as const;

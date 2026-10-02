@@ -1,0 +1,38 @@
+# Local infrastructure for LiveClass IDE development.
+# Postgres (durable state) + Redis (ephemeral real-time + pub/sub).
+# Variable substitution falls back to the defaults below when no .env is present.
+# Backend + nginx containers are added in Step 12.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-liveclass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-liveclass}
+      POSTGRES_DB: ${POSTGRES_DB:-liveclass}
+    ports:
+      # Host 5433 (not 5432) to avoid clashing with a native Postgres install;
+      # bound to loopback so it is not exposed on the network.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-liveclass} -d ${POSTGRES_DB:-liveclass}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    # Ephemeral: no persistence (real-time state only; durable state lives in Postgres).
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

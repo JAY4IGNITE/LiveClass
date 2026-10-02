@@ -1,0 +1,55 @@
+{
+  "name": "@liveclass/vscode-extension",
+  "displayName": "LiveClass IDE",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      { "command": "liveclass.login", "title": "LiveClass: Sign In" },
+      { "command": "liveclass.createClass", "title": "LiveClass (Teacher): Create Class" },
+      { "command": "liveclass.createSession", "title": "LiveClass (Teacher): Create Session" },
+      { "command": "liveclass.selectProject", "title": "LiveClass (Teacher): Select Project" },
+      { "command": "liveclass.startSharing", "title": "LiveClass (Teacher): Start Sharing" },
+      { "command": "liveclass.stopSharing", "title": "LiveClass (Teacher): Stop Sharing" },
+      { "command": "liveclass.viewStudents", "title": "LiveClass (Teacher): View Connected Students" },
+      { "command": "liveclass.pauseSync", "title": "LiveClass (Teacher): Pause Synchronization" },
+      { "command": "liveclass.resumeSync", "title": "LiveClass (Teacher): Resume Synchronization" },
+      { "command": "liveclass.endSession", "title": "LiveClass (Teacher): End Session" },
+      { "command": "liveclass.chooseWorkspace", "title": "LiveClass (Student): Choose Workspace" },
+      { "command": "liveclass.approveWorkspace", "title": "LiveClass (Student): Approve Workspace" },
+      { "command": "liveclass.joinSession", "title": "LiveClass (Student): Join Session" },
+      { "command": "liveclass.followTeacher", "title": "LiveClass (Student): Follow Teacher" },
+      { "command": "liveclass.stopFollowing", "title": "LiveClass (Student): Stop Following" },
+      { "command": "liveclass.leaveSession", "title": "LiveClass (Student): Leave Session" }
+    ],
+    "configuration": {
+      "title": "LiveClass",
+      "properties": {
+        "liveclass.serverUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8000",
+          "description": "LiveClass server base URL (REST; the WebSocket URL is derived as ws(s)://host/ws)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup src/extension.ts --format cjs --external vscode --out-dir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@liveclass/sync-engine": "workspace:*",
+    "@liveclass/shared-types": "workspace:*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.13"
+  }
+}

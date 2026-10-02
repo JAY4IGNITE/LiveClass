@@ -1,0 +1,30 @@
+# Node / TypeScript
+node_modules/
+dist/
+out/
+*.tsbuildinfo
+.turbo/
+*.vsix
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Architecture and Agents
+AGENTS.md
+CLAUDE.md
+docs/ARCHITECTURE.md
