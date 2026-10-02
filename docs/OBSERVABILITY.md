@@ -53,5 +53,5 @@ under real 1→250 load before any scalability claim.
 ## Health
 
 `GET /healthz` returns `{"status":"ok"}` for liveness/readiness probes. Redis and
-Postgres health are surfaced by their docker-compose healthchecks locally and
+Postgres health can be monitored using standard database tools locally and
 should back a readiness gate in deployment [planned: inc 6].

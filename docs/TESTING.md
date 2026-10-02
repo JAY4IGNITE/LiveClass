@@ -32,7 +32,7 @@ uses a seeded PRNG and compares against an independent reference applier.
 pnpm -w test                          # TS unit (all packages)
 pnpm -w typecheck                     # TS typecheck
 uv run pytest -m "not integration"    # Python unit
-docker compose up -d --wait           # Postgres + Redis (required below)
+# Ensure Postgres and Redis are running locally
 uv run alembic upgrade head
 uv run pytest -m integration          # integration + websocket
 pnpm --filter @liveclass/e2e run e2e  # end-to-end (spawns a server)

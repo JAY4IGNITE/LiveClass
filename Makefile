@@ -2,7 +2,7 @@
 #
 #   make load-test STUDENTS=250
 #
-# Requires Docker (Postgres + Redis), the uv venv (`uv sync`), and pnpm install.
+# Requires Postgres + Redis, the uv venv (`uv sync`), and pnpm install.
 # Writes a machine-readable JSON result under tests/load/results/ and prints a
 # human-readable summary. Exits non-zero unless the run passes
 # (100% connection + sync success, 0 failed operations).
@@ -18,9 +18,7 @@ help:
 	@echo "make load-test-smoke          # quick 25-student smoke run"
 
 load-test:
-	docker compose up -d --wait
 	pnpm exec tsx tests/load/loadtest.ts --students $(STUDENTS) --documents $(DOCUMENTS) --duration $(DURATION)
 
 load-test-smoke:
-	docker compose up -d --wait
 	pnpm exec tsx tests/load/loadtest.ts --students 25 --documents 4 --duration 8

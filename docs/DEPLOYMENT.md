@@ -21,15 +21,14 @@ so per-IP controls [planned] cannot be spoofed.
 
 ```bash
 pnpm install && uv sync
-docker compose up -d --wait     # Postgres on 127.0.0.1:5433, Redis on 127.0.0.1:6380
+# Ensure Postgres and Redis are running on the ports specified in your .env
 uv run alembic upgrade head
 uv run python scripts/seed.py
 uv run uvicorn liveclass_collab.app:app --port 8000
 ```
 
 Host ports **5433/6380** avoid clashing with a native Postgres on 5432; defaults
-in `.env.example` match. `docker-compose.yml` runs only Postgres + Redis in
-inc 1; the app runs via `uv`/`uvicorn`.
+in `.env.example` match. The app runs via `uv`/`uvicorn`.
 
 ## Configuration
 
@@ -53,7 +52,7 @@ inc 1; the app runs via `uv`/`uvicorn`.
 | `node-unit` | `pnpm install`, `pnpm -w typecheck`, `pnpm -w test` |
 | `python-unit` | `uv sync`, `ruff check`, `pytest -m "not integration"` |
 | `codegen-drift` | regenerate protocol artifacts, fail if committed copies drift |
-| `integration` | `docker compose up --wait`, `alembic upgrade`, `pytest -m integration`, e2e, load smoke (N=5) |
+| `integration` | Start local DBs, `alembic upgrade`, `pytest -m integration`, e2e, load smoke (N=5) |
 
 ## Scaling & release path
 

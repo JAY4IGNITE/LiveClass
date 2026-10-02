@@ -20,29 +20,28 @@ a dropped student reconnects and re-converges — all authorized server-side.
 | `services/collaboration` | WebSocket gateway + authoritative Redis-Lua sequencer |
 | `extensions/vscode` | VS Code extension (thin host adapter) |
 | `apps/web` | React dashboard (stub) |
-| `infrastructure/` | docker-compose, nginx, redis config |
+| `infrastructure/` | nginx, redis config |
 | `tests/` | unit, integration, websocket, e2e, load |
 
 ## Prerequisites
 
 - Node ≥ 20 and **pnpm** (`npm i -g pnpm`)
 - Python ≥ 3.12 and **uv**
-- Docker Desktop (PostgreSQL + Redis)
+- PostgreSQL and Redis running locally
 
 ## Quickstart (Windows: Git Bash or PowerShell; also Linux/macOS)
 
 ```bash
 pnpm install                       # TypeScript workspace
 uv sync                            # Python workspace (.venv at repo root)
-docker compose up -d --wait        # Postgres (localhost:5433) + Redis (localhost:6380)
+# Ensure Postgres and Redis are running locally
 uv run alembic upgrade head        # apply migrations
 uv run python scripts/seed.py      # seed teacher1 / student1 (password123) + a demo session
 uv run uvicorn liveclass_collab.app:app --port 8000   # HTTP API + WS gateway (one process)
 ```
 
-`docker-compose.yml` maps Postgres to host **5433** and Redis to **6380** to avoid
-clashing with a native Postgres on 5432. The app reads `DATABASE_URL` / `REDIS_URL`
-(see `.env.example`); copy it to `.env` to override.
+The app reads `DATABASE_URL` / `REDIS_URL` (see `.env.example`); copy it to `.env` to override.
+Make sure your local Postgres and Redis are running on the ports specified in your `.env`.
 
 ## Protocol codegen
 
@@ -82,9 +81,8 @@ and **load** (baseline only — scaling to 250 is a later, evidence-backed incre
 ## Deployment
 
 `infrastructure/nginx/liveclass.conf` terminates TLS and proxies WebSocket
-upgrades to the backend. Containerizing the backend and the full multi-service
-`docker compose` stack is part of the later scale/deploy increment; local
-development runs the single-process app via `uv`/`uvicorn` as shown above.
+upgrades to the backend. Local development runs the single-process app via
+`uv`/`uvicorn` as shown above.
 
 See [`CLAUDE.md`](./CLAUDE.md) for engineering rules and [`docs/`](./docs) for the
 technical specifications ([PRD](./docs/PRD.md), [ARCHITECTURE](./docs/ARCHITECTURE.md),
