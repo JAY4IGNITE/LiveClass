@@ -29,6 +29,7 @@ def create_app() -> FastAPI:
     app.include_router(ws_router)
 
     @app.get("/healthz", tags=["ops"])
+    @app.head("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
