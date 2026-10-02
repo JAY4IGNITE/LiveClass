@@ -10,7 +10,7 @@ import json
 import uuid
 
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from liveclass_api.core.models import Document, DocumentSnapshot
 
@@ -21,23 +21,22 @@ def _key(document_id: str) -> str:
 
 async def store(
     redis: Redis,
-    session_factory: async_sessionmaker,
+    session: AsyncSession,
     *,
     document_id: str,
     version: int,
     content: str,
 ) -> None:
     await redis.set(_key(document_id), json.dumps({"version": version, "content": content}))
-    async with session_factory() as session:
-        session.add(
-            DocumentSnapshot(
-                document_id=uuid.UUID(document_id), version=version, content=content
-            )
+    session.add(
+        DocumentSnapshot(
+            document_id=uuid.UUID(document_id), version=version, content=content
         )
-        doc = await session.get(Document, uuid.UUID(document_id))
-        if doc is not None and version > doc.checkpoint_version:
-            doc.checkpoint_version = version
-        await session.commit()
+    )
+    doc = await session.get(Document, uuid.UUID(document_id))
+    if doc is not None and version > doc.checkpoint_version:
+        doc.checkpoint_version = version
+    await session.commit()
 
 
 async def latest(redis: Redis, document_id: str) -> dict | None:

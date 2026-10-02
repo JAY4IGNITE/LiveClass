@@ -346,13 +346,14 @@ class Connection:
         if document_id not in self.document_ids:
             await self._send_error("UNKNOWN_DOCUMENT", "document not in session")
             return
-        await snapshots.store(
-            self.redis,
-            get_sessionmaker(),
-            document_id=document_id,
-            version=msg.version,
-            content=msg.content,
-        )
+        async with get_sessionmaker()() as session:
+            await snapshots.store(
+                self.redis,
+                session,
+                document_id=document_id,
+                version=msg.version,
+                content=msg.content,
+            )
 
     async def _audit(self, event_type: str) -> None:
         async with get_sessionmaker()() as session:
