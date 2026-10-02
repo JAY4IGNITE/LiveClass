@@ -4,18 +4,17 @@ Run locally with:  ``uv run uvicorn liveclass_collab.app:app --port 8000``
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from liveclass_api.core.logging import configure_logging
 from liveclass_api.http import auth, classes, sessions
 from liveclass_collab.gateway import router as ws_router
 
 
-from fastapi.middleware.cors import CORSMiddleware
-
 def create_app() -> FastAPI:
     configure_logging(json_output=False)
     app = FastAPI(title="LiveClass", version="0.0.0")
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],  # Allows all origins

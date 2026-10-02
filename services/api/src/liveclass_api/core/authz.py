@@ -28,15 +28,11 @@ async def authenticate(session: AsyncSession, username: str, password: str) -> U
     return user
 
 
-async def get_session_row(
-    session: AsyncSession, session_id: uuid.UUID
-) -> ClassSession | None:
+async def get_session_row(session: AsyncSession, session_id: uuid.UUID) -> ClassSession | None:
     return await session.get(ClassSession, session_id)
 
 
-async def is_member(
-    session: AsyncSession, session_id: uuid.UUID, user_id: uuid.UUID
-) -> bool:
+async def is_member(session: AsyncSession, session_id: uuid.UUID, user_id: uuid.UUID) -> bool:
     row = await session.get(SessionMember, {"session_id": session_id, "user_id": user_id})
     return row is not None
 

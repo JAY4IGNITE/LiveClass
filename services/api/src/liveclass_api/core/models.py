@@ -82,9 +82,7 @@ class Class(Base):
 class SessionMember(Base):
     __tablename__ = "session_members"
 
-    session_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("sessions.id"), primary_key=True
-    )
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sessions.id"), primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     role: Mapped[UserRole] = mapped_column(_role)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -105,9 +103,7 @@ class DocumentSnapshot(Base):
     __tablename__ = "document_snapshots"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    document_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("documents.id"), index=True
-    )
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id"), index=True)
     version: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
@@ -120,9 +116,7 @@ class AuditEvent(Base):
     session_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("sessions.id"), nullable=True, index=True
     )
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     type: Mapped[str] = mapped_column(String(64), index=True)
     # Python attribute ``payload`` -> DB column ``metadata`` (``metadata`` is
     # reserved on the declarative Base).

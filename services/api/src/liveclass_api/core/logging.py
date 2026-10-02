@@ -7,9 +7,7 @@ import structlog
 
 def configure_logging(level: int = logging.INFO, *, json_output: bool = True) -> None:
     renderer = (
-        structlog.processors.JSONRenderer()
-        if json_output
-        else structlog.dev.ConsoleRenderer()
+        structlog.processors.JSONRenderer() if json_output else structlog.dev.ConsoleRenderer()
     )
     structlog.configure(
         processors=[

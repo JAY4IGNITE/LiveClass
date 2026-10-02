@@ -45,8 +45,10 @@ async def _reclaim_session_state(session: SessionDep, session_id: uuid.UUID) -> 
     """Delete an ended session's ephemeral Redis state so it cannot leak/grow
     unbounded across sessions (keyspace per docs/DATABASE.md)."""
     doc_ids = (
-        await session.execute(select(Document.id).where(Document.session_id == session_id))
-    ).scalars().all()
+        (await session.execute(select(Document.id).where(Document.session_id == session_id)))
+        .scalars()
+        .all()
+    )
     keys = [f"session:{session_id}:presence"]
     for doc_id in doc_ids:
         keys += [
@@ -102,13 +104,17 @@ async def list_sessions(user: CurrentUser, session: SessionDep) -> list[SessionR
     if user.role is not UserRole.instructor:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only instructors can list sessions")
     rows = (
-        await session.execute(
-            select(ClassSession)
-            .where(ClassSession.instructor_id == user.id)
-            .where(ClassSession.state != SessionState.ended)
-            .order_by(ClassSession.created_at.desc())
+        (
+            await session.execute(
+                select(ClassSession)
+                .where(ClassSession.instructor_id == user.id)
+                .where(ClassSession.state != SessionState.ended)
+                .order_by(ClassSession.created_at.desc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return [SessionResponse.model_validate(c) for c in rows]
 
 
@@ -133,14 +139,10 @@ async def join_session(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown session")
     if class_session.state is SessionState.ended:
         raise HTTPException(status.HTTP_409_CONFLICT, "Session has ended")
-    existing = await session.get(
-        SessionMember, {"session_id": session_id, "user_id": user.id}
-    )
+    existing = await session.get(SessionMember, {"session_id": session_id, "user_id": user.id})
     if existing is None:
         session.add(
-            SessionMember(
-                session_id=session_id, user_id=user.id, role=user.role, approved=True
-            )
+            SessionMember(session_id=session_id, user_id=user.id, role=user.role, approved=True)
         )
         await session.commit()
     return SessionResponse.model_validate(class_session)

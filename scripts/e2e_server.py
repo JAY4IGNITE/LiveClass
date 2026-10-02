@@ -41,8 +41,7 @@ async def _seed() -> dict:
         s.add(session)
         await s.flush()
         docs = [
-            Document(session_id=session.id, relative_path=f"src/f{i}.py")
-            for i in range(_N_DOCS)
+            Document(session_id=session.id, relative_path=f"src/f{i}.py") for i in range(_N_DOCS)
         ]
         s.add_all(
             [

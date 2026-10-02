@@ -38,9 +38,7 @@ async def seed() -> None:
             )
         ).first()
         if has_session is None:
-            class_session = ClassSession(
-                instructor_id=instructor.id, state=SessionState.created
-            )
+            class_session = ClassSession(instructor_id=instructor.id, state=SessionState.created)
             session.add(class_session)
             await session.flush()
             session.add_all(

@@ -18,20 +18,24 @@ async def login(body: LoginRequest, session: SessionDep) -> TokenResponse:
     token = create_access_token(subject=str(user.id), role=user.role.value)
     return TokenResponse(access_token=token, user_id=user.id, role=user.role)
 
+
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(body: RegisterRequest, session: SessionDep) -> TokenResponse:
+    from sqlalchemy import select
+
     from liveclass_api.core.models import User
     from liveclass_api.core.security import hash_password
-    from sqlalchemy import select
-    
-    existing = (await session.execute(select(User).where(User.username == body.username))).scalar_one_or_none()
+
+    existing = (
+        await session.execute(select(User).where(User.username == body.username))
+    ).scalar_one_or_none()
     if existing:
         raise HTTPException(status.HTTP_409_CONFLICT, "Username already exists")
-        
+
     user = User(username=body.username, password_hash=hash_password(body.password), role=body.role)
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    
+
     token = create_access_token(subject=str(user.id), role=user.role.value)
     return TokenResponse(access_token=token, user_id=user.id, role=user.role)

@@ -121,6 +121,7 @@ class Connection:
                 },
             )
         )
+
     async def _join(self) -> None:
         raw = await self.ws.receive_text()
         try:
@@ -144,10 +145,14 @@ class Connection:
             # session may edit, regardless of account role or mere membership.
             self.is_teacher = authz.is_instructor_of(class_session, self.user)
             docs = (
-                await session.execute(
-                    select(Document).where(Document.session_id == class_session.id)
+                (
+                    await session.execute(
+                        select(Document).where(Document.session_id == class_session.id)
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
         self.document_ids = {str(d.id) for d in docs}
         await presence.join(self.redis, self.session_id, str(self.user.id), self.role)
         # Subscribe before sending welcome so the client cannot miss a broadcast
@@ -221,6 +226,7 @@ class Connection:
             pass
         else:
             await self._send_error("INVALID_MESSAGE", f"unexpected message: {msg.type}")
+
     async def _handle_doc_change(self, msg) -> None:
         if not self.is_teacher:
             await self._send_error(
@@ -305,7 +311,11 @@ class Connection:
                 if class_session:
                     try:
                         if msg.op == "create" and msg.kind == "file":
-                            new_doc = Document(id=uuid.UUID(doc_id), session_id=class_session.id, relative_path=msg.path)
+                            new_doc = Document(
+                                id=uuid.UUID(doc_id),
+                                session_id=class_session.id,
+                                relative_path=msg.path,
+                            )
                             session.add(new_doc)
                             await session.commit()
                             self.document_ids.add(doc_id)
@@ -315,7 +325,11 @@ class Connection:
                                 await session.delete(doc)
                                 await session.commit()
                                 self.document_ids.discard(doc_id)
-                        elif msg.op == "rename" and msg.kind == "file" and getattr(msg, "newPath", None):
+                        elif (
+                            msg.op == "rename"
+                            and msg.kind == "file"
+                            and getattr(msg, "newPath", None)
+                        ):
                             doc = await session.get(Document, uuid.UUID(doc_id))
                             if doc and doc.session_id == class_session.id:
                                 doc.relative_path = msg.newPath
@@ -328,7 +342,14 @@ class Connection:
             document_id=self.session_id,
             base_version=msg.treeBaseVersion,
             client_op_id=str(msg.msgId),
-            edits=[{"op": msg.op, "kind": msg.kind, "path": msg.path, "newPath": getattr(msg, "newPath", None)}],
+            edits=[
+                {
+                    "op": msg.op,
+                    "kind": msg.kind,
+                    "path": msg.path,
+                    "newPath": getattr(msg, "newPath", None),
+                }
+            ],
             author_id=str(self.user.id),
             ts=_now_ms(),
             buffer_window=self.settings.op_buffer_window,

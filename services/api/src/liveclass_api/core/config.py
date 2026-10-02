@@ -7,9 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     database_url: str = "postgresql+asyncpg://liveclass:liveclass@127.0.0.1:5433/liveclass"
     redis_url: str = "redis://127.0.0.1:6380/0"
@@ -35,9 +33,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _check_recovery_invariant(self) -> "Settings":
         if self.snapshot_interval >= self.op_buffer_window:
-            raise ValueError(
-                "snapshot_interval must be < op_buffer_window (recovery invariant D6)"
-            )
+            raise ValueError("snapshot_interval must be < op_buffer_window (recovery invariant D6)")
         return self
 
 

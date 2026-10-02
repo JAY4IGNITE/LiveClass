@@ -29,9 +29,7 @@ async def store(
 ) -> None:
     await redis.set(_key(document_id), json.dumps({"version": version, "content": content}))
     session.add(
-        DocumentSnapshot(
-            document_id=uuid.UUID(document_id), version=version, content=content
-        )
+        DocumentSnapshot(document_id=uuid.UUID(document_id), version=version, content=content)
     )
     doc = await session.get(Document, uuid.UUID(document_id))
     if doc is not None and version > doc.checkpoint_version:

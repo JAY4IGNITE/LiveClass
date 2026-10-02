@@ -9,7 +9,7 @@ logger = logging.getLogger("liveclass.broadcaster")
 
 
 class SessionBroadcaster:
-    """Manages a single Redis pub/sub connection per session and fans out to all local WebSockets."""
+    """Manages a single Redis pub/sub connection per session."""
 
     def __init__(self, session_id: str):
         self.session_id = session_id
