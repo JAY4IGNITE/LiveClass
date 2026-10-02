@@ -1,0 +1,36 @@
+services:
+  # 1. Ephemeral Redis Cache (Free Tier)
+  - type: redis
+    name: liveclass-redis
+    plan: free
+    ipAllowList: [] # Only allow internal Render connections
+
+  # 2. Python FastAPI Web Service (Free Tier)
+  - type: web
+    name: liveclass-backend
+    env: python
+    plan: free
+    region: ohio # Default US region
+    buildCommand: "pip install uv && uv sync"
+    startCommand: "uv run uvicorn liveclass_collab.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      # Connect to the Redis instance defined above automatically
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: liveclass-redis
+          property: connectionString
+      
+      # Connect to your external Supabase PostgreSQL database
+      - key: DATABASE_URL
+        sync: false # You must paste your Supabase URL manually in the Render Dashboard!
+      
+      # Security Keys
+      - key: JWT_SECRET
+        generateValue: true # Render will auto-generate a secure random password for you!
+      - key: JWT_ISSUER
+        value: "liveclass"
+      - key: JWT_AUDIENCE
+        value: "liveclass-clients"
+      - key: JWT_EXPIRES_SECONDS
+        value: "604800" # 7 days
