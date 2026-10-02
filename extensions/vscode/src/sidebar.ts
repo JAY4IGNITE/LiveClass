@@ -48,18 +48,24 @@ export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<Action
 
     if (!role) {
       items.push(new ActionItem("Sign In", "liveclass.login", "account"));
+      items.push(new ActionItem("Register Account", "liveclass.register", "add"));
       return Promise.resolve(items);
     }
 
     if (role === "instructor") {
       if (!this.controller.activeSessionId) {
-        items.push(new ActionItem("Create Class", "liveclass.createClass", "add"));
-        items.push(new ActionItem("Create Session", "liveclass.createSession", "play"));
+        items.push(new ActionItem("Create Class", "liveclass.createClass", "organization"));
+        items.push(new ActionItem("Create Session", "liveclass.createSession", "add"));
         items.push(new ActionItem("Resume Session", "liveclass.resumeSession", "history"));
       } else {
-        items.push(new ActionItem(`Session: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`, "liveclass.copySessionId", "key"));
+        items.push(new ActionItem(`Session ID: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`, "liveclass.copySessionId", "key"));
+        
+        // Use a descriptive property or getter to show selected project
+        const projectPath = (this.controller as any).projectDoc?.uri.fsPath;
+        const projectLabel = projectPath ? `Project: ${projectPath.split(/[\\/]/).pop()}` : "Select Project to Share";
+        
         if (!this.controller.isSharing) {
-          items.push(new ActionItem("Select Project", "liveclass.selectProject", "folder"));
+          items.push(new ActionItem(projectLabel, "liveclass.selectProject", "folder"));
           items.push(new ActionItem("Start Sharing", "liveclass.startSharing", "broadcast"));
         } else {
           items.push(new ActionItem("View Connected Students", "liveclass.viewStudents", "organization"));
@@ -75,7 +81,7 @@ export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<Action
         items.push(new ActionItem("Approve Workspace", "liveclass.approveWorkspace", "check"));
         items.push(new ActionItem("Join Session", "liveclass.joinSession", "link"));
       } else {
-        items.push(new ActionItem(`Session: ${this.controller.activeSessionId.slice(0, 8)}`, "liveclass.copySessionId", "key"));
+        items.push(new ActionItem(`Connected: ${this.controller.activeSessionId.slice(0, 8)}`, "liveclass.copySessionId", "key"));
         if (!this.controller.isFollowing) {
           items.push(new ActionItem("Follow Teacher", "liveclass.followTeacher", "eye"));
         } else {

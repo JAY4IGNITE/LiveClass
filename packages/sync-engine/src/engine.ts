@@ -280,16 +280,30 @@ export class SyncEngine {
     documents: ReadonlyArray<{ documentId: string; relativePath: string; version: number }>,
   ): void {
     this.setState("live");
-    for (const d of documents) {
+    const docsToSync = documents.filter(d => {
       const doc = this.ensureDoc(d.documentId);
-      if (d.version > doc.lastApplied) {
-        // Fresh join or missed ops while away -> recover from our last version.
+      return d.version > doc.lastApplied;
+    });
+
+    // Send resync_request in batches to avoid overwhelming the WebSocket (Max 50/sec)
+    const processBatch = (startIndex: number) => {
+      const batchSize = 10;
+      for (let i = startIndex; i < Math.min(startIndex + batchSize, docsToSync.length); i++) {
+        const d = docsToSync[i]!;
+        const doc = this.ensureDoc(d.documentId);
         this.send({
           type: "resync_request",
           documentId: d.documentId,
           fromVersion: doc.lastApplied,
         });
       }
+      if (startIndex + batchSize < docsToSync.length) {
+        setTimeout(() => processBatch(startIndex + batchSize), 200); // 10 msgs every 200ms
+      }
+    };
+    
+    if (docsToSync.length > 0) {
+      processBatch(0);
     }
     this.emit("welcome", documents);
   }

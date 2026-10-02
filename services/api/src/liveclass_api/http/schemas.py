@@ -12,6 +12,11 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: UserRole
+
 
 class TokenResponse(BaseModel):
     access_token: str

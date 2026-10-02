@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Shared
     reg("liveclass.login", () => controller.login()),
     reg("liveclass.logout", () => controller.logout()),
+    reg("liveclass.register", () => controller.register()),
     // Teacher
     reg("liveclass.createClass", () => controller.createClass()),
     reg("liveclass.createSession", () => controller.createSession()),

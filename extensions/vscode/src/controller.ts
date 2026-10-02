@@ -77,9 +77,33 @@ export class LiveClassController {
       await this.secrets.store("liveclass.role", this.role);
       this.status.set("signed in", result.role);
       this._onDidChange.fire();
-      void vscode.window.showInformationMessage(`LiveClass: signed in as ${result.role}`);
     } catch (err) {
       this.fail("Login failed", err);
+    }
+  }
+
+  async register(): Promise<void> {
+    const role = await vscode.window.showQuickPick(
+      [{ label: "Instructor", id: "instructor" }, { label: "Student", id: "student" }],
+      { placeHolder: "Select role for new account" }
+    );
+    if (!role) return;
+
+    const username = await vscode.window.showInputBox({ prompt: "Choose a Username" });
+    if (!username) return;
+    const password = await vscode.window.showInputBox({ prompt: "Choose a Password", password: true });
+    if (!password) return;
+
+    try {
+      const result = await this.api.register(username, password, role.id);
+      this.token = result.access_token;
+      this.role = result.role;
+      await this.secrets.store("liveclass.token", this.token);
+      await this.secrets.store("liveclass.role", this.role);
+      this.status.set("signed in", result.role);
+      this._onDidChange.fire();
+    } catch (err) {
+      this.fail("Registration failed", err);
     }
   }
 
@@ -90,7 +114,6 @@ export class LiveClassController {
     await this.secrets.delete("liveclass.role");
     this.status.set("disconnected");
     this._onDidChange.fire();
-    void vscode.window.showInformationMessage("LiveClass: signed out");
   }
   // ---- teacher ----
 
@@ -99,8 +122,8 @@ export class LiveClassController {
     const name = await vscode.window.showInputBox({ prompt: "Class name" });
     if (!name) return;
     try {
-      const cls = await this.api.createClass(name);
-      void vscode.window.showInformationMessage(`Created class "${cls.name}"`);
+      await this.api.createClass(name);
+      this._onDidChange.fire();
     } catch (err) {
       this.fail("Create class failed", err);
     }
@@ -125,7 +148,6 @@ export class LiveClassController {
       this.sessionId = created.id;
       this.status.set("session created", created.id.slice(0, 8));
       this._onDidChange.fire();
-      void vscode.window.showInformationMessage(`Session created: ${created.id}`);
     } catch (err) {
       this.fail("Create session failed", err);
     }
@@ -147,7 +169,6 @@ export class LiveClassController {
       this.sessionId = pick.id;
       this.status.set("session ready", pick.id.slice(0, 8));
       this._onDidChange.fire();
-      void vscode.window.showInformationMessage(`Selected session: ${pick.id}`);
     } catch (err) {
       this.fail("Failed to list sessions", err);
     }
@@ -161,7 +182,7 @@ export class LiveClassController {
       return;
     }
     this.projectDoc = doc;
-    void vscode.window.showInformationMessage(`Selected ${doc.uri.fsPath} to share`);
+    this._onDidChange.fire();
   }
 
   startSharing(): void {

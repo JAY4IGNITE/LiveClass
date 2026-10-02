@@ -67,6 +67,12 @@ export class ApiClient {
     return result;
   }
 
+  async register(username: string, password: string, role: string): Promise<LoginResult> {
+    const result = await this.request<LoginResult>("POST", "/auth/register", { username, password, role });
+    this.token = result.access_token;
+    return result;
+  }
+
   createClass(name: string): Promise<ClassInfo> {
     return this.request("POST", "/classes", { name });
   }
