@@ -8,8 +8,8 @@
 # (100% connection + sync success, 0 failed operations).
 
 STUDENTS ?= 250
-DOCUMENTS ?= 8
-DURATION ?= 20
+DOCUMENTS ?= 50
+DURATION ?= 300
 
 .PHONY: help load-test load-test-smoke
 

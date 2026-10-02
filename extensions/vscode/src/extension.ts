@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Teacher
     reg("liveclass.createClass", () => controller.createClass()),
     reg("liveclass.createSession", () => controller.createSession()),
+    reg("liveclass.resumeSession", () => controller.resumeSession()),
     reg("liveclass.selectProject", () => controller.selectProject()),
     reg("liveclass.startSharing", () => controller.startSharing()),
     reg("liveclass.stopSharing", () => controller.stopSharing()),

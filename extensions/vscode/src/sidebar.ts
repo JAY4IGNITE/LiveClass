@@ -55,6 +55,7 @@ export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<Action
       if (!this.controller.activeSessionId) {
         items.push(new ActionItem("Create Class", "liveclass.createClass", "add"));
         items.push(new ActionItem("Create Session", "liveclass.createSession", "play"));
+        items.push(new ActionItem("Resume Session", "liveclass.resumeSession", "history"));
       } else {
         items.push(new ActionItem(`Session: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`, "liveclass.copySessionId", "key"));
         if (!this.controller.isSharing) {

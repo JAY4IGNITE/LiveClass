@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-only-change-me-please-set-a-real-32B+-secret"
     jwt_issuer: str = "liveclass"
     jwt_audience: str = "liveclass-clients"
-    jwt_expires_seconds: int = 3600
+    jwt_expires_seconds: int = 604800
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

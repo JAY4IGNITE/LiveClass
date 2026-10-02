@@ -97,6 +97,21 @@ async def create_session(
     return SessionResponse.model_validate(class_session)
 
 
+@router.get("", response_model=list[SessionResponse])
+async def list_sessions(user: CurrentUser, session: SessionDep) -> list[SessionResponse]:
+    if user.role is not UserRole.instructor:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only instructors can list sessions")
+    rows = (
+        await session.execute(
+            select(ClassSession)
+            .where(ClassSession.instructor_id == user.id)
+            .where(ClassSession.state != SessionState.ended)
+            .order_by(ClassSession.created_at.desc())
+        )
+    ).scalars().all()
+    return [SessionResponse.model_validate(c) for c in rows]
+
+
 @router.get("/{session_id}", response_model=SessionResponse)
 async def get_session_endpoint(
     session_id: uuid.UUID, user: CurrentUser, session: SessionDep

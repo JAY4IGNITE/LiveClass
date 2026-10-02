@@ -131,6 +131,28 @@ export class LiveClassController {
     }
   }
 
+  async resumeSession(): Promise<void> {
+    if (!this.requireRole("instructor")) return;
+    try {
+      const sessions = await this.api.listSessions();
+      if (sessions.length === 0) {
+        void vscode.window.showInformationMessage("No active sessions found.");
+        return;
+      }
+      const pick = await vscode.window.showQuickPick(
+        sessions.map(s => ({ label: `Session ${s.id.slice(0, 8)} (${s.state})`, description: new Date(s.created_at).toLocaleString(), id: s.id })),
+        { placeHolder: "Select a previous session to resume" }
+      );
+      if (!pick) return;
+      this.sessionId = pick.id;
+      this.status.set("session ready", pick.id.slice(0, 8));
+      this._onDidChange.fire();
+      void vscode.window.showInformationMessage(`Selected session: ${pick.id}`);
+    } catch (err) {
+      this.fail("Failed to list sessions", err);
+    }
+  }
+
   selectProject(): void {
     if (!this.requireRole("instructor")) return;
     const doc = vscode.window.activeTextEditor?.document;

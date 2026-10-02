@@ -76,6 +76,9 @@ export class ApiClient {
   createSession(classId?: string): Promise<SessionInfo> {
     return this.request("POST", "/sessions", classId ? { class_id: classId } : {});
   }
+  listSessions(): Promise<SessionInfo[]> {
+    return this.request("GET", "/sessions");
+  }
   getSession(id: string): Promise<SessionInfo> {
     return this.request("GET", `/sessions/${id}`);
   }
