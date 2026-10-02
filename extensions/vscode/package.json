@@ -1,5 +1,6 @@
 {
-  "name": "@liveclass/vscode-extension",
+  "name": "liveclass-ide",
+  "publisher": "jay4ignite",
   "displayName": "LiveClass IDE",
   "version": "0.0.0",
   "private": true,
@@ -38,8 +39,15 @@
       }
     }
   },
+  "tsup": {
+    "entry": ["src/extension.ts"],
+    "format": ["cjs"],
+    "external": ["vscode"],
+    "noExternal": ["@liveclass/sync-engine", "@liveclass/shared-types", "ws"],
+    "outDir": "dist"
+  },
   "scripts": {
-    "build": "tsup src/extension.ts --format cjs --external vscode --out-dir dist",
+    "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
