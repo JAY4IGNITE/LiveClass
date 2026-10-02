@@ -236,7 +236,7 @@ export function Dashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="bg-slate-900/40 rounded-2xl p-6 border border-white/5 shadow-inner">
                           <p className="text-slate-500 text-sm font-medium mb-2 uppercase tracking-wider">Created By</p>
-                          <p className="text-slate-200 font-mono text-base truncate">{session.host_id}</p>
+                          <p className="text-slate-200 font-mono text-base truncate">{session.instructor_id}</p>
                         </div>
                         <div className="bg-slate-900/40 rounded-2xl p-6 border border-white/5 shadow-inner">
                           <p className="text-slate-500 text-sm font-medium mb-2 uppercase tracking-wider">Start Time</p>
