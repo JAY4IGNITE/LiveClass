@@ -43,6 +43,23 @@ uv run uvicorn liveclass_collab.app:app --port 8000   # HTTP API + WS gateway (o
 The app reads `DATABASE_URL` / `REDIS_URL` (see `.env.example`); copy it to `.env` to override.
 Make sure your local Postgres and Redis are running on the ports specified in your `.env`.
 
+## Usage Guide (VS Code)
+
+Once the backend is running, you can use the LiveClass VS Code extension to teach or learn.
+
+### Teacher (Instructor) Workflow
+1. **Open your project:** Open the code you want to teach in a new VS Code window.
+2. **Sign In:** Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **`LiveClass: Sign In`**. Log in using teacher credentials (e.g., username: `teacher1`, password: `password123` if you ran the seed script).
+3. **Start Sharing:** Run **`LiveClass (Teacher): Start Sharing`** and select the active session. 
+4. **Teach:** Simply start typing! The extension tracks your active documents and securely broadcasts your edits in real-time to the central gateway.
+
+### Student Workflow
+1. **Prepare Workspace:** Open an empty folder in VS Code where you want the class files to be mirrored.
+2. **Sign In:** Run **`LiveClass: Sign In`** from the Command Palette using student credentials (e.g., username: `student1`, password: `password123`).
+3. **Join Session:** Run **`LiveClass (Student): Join Session`** and select the active class session.
+4. **Approve Workspace:** For security, the extension isolates file writes. You will be prompted to approve the current workspace root for synchronization. Click approve.
+5. **Learn:** Watch the files magically populate and update as the teacher types. The synced files are read-only for you; only the teacher is the authoritative writer. You can also run **`LiveClass (Student): Follow Teacher`** to make your editor scroll exactly where the teacher is looking.
+
 ## Protocol codegen
 
 The schema in `packages/protocol/schemas` is the single source of truth.
