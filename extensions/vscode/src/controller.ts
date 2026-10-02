@@ -39,6 +39,7 @@ export class LiveClassController {
   public get isObserving(): boolean { return this.mirror !== null; }
   public get isFollowing(): boolean { return this.following; }
 
+  public get activeProject(): string | null { return this.projectDoc?.uri.fsPath || null; }
   private projectDoc: vscode.TextDocument | null = null;
 
   constructor(

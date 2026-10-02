@@ -61,7 +61,7 @@ export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<Action
         items.push(new ActionItem(`Session ID: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`, "liveclass.copySessionId", "key"));
         
         // Use a descriptive property or getter to show selected project
-        const projectPath = (this.controller as any).projectDoc?.uri.fsPath;
+        const projectPath = this.controller.activeProject;
         const projectLabel = projectPath ? `Project: ${projectPath.split(/[\\/]/).pop()}` : "Select Project to Share";
         
         if (!this.controller.isSharing) {
