@@ -48,27 +48,48 @@ export class ApiClient {
     return `${this.baseUrl.replace(/^http/, "ws")}/ws`;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const headers: Record<string, string> = { "content-type": "application/json" };
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+    };
     if (this.token) headers.authorization = `Bearer ${this.token}`;
     const res = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
-    if (!res.ok) throw new ApiError(res.status, `${method} ${path} failed (${res.status})`);
+    if (!res.ok)
+      throw new ApiError(
+        res.status,
+        `${method} ${path} failed (${res.status})`,
+      );
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
   }
 
   async login(username: string, password: string): Promise<LoginResult> {
-    const result = await this.request<LoginResult>("POST", "/auth/login", { username, password });
+    const result = await this.request<LoginResult>("POST", "/auth/login", {
+      username,
+      password,
+    });
     this.token = result.access_token;
     return result;
   }
 
-  async register(username: string, password: string, role: string): Promise<LoginResult> {
-    const result = await this.request<LoginResult>("POST", "/auth/register", { username, password, role });
+  async register(
+    username: string,
+    password: string,
+    role: string,
+  ): Promise<LoginResult> {
+    const result = await this.request<LoginResult>("POST", "/auth/register", {
+      username,
+      password,
+      role,
+    });
     this.token = result.access_token;
     return result;
   }
@@ -80,7 +101,11 @@ export class ApiClient {
     return this.request("GET", "/classes");
   }
   createSession(classId?: string): Promise<SessionInfo> {
-    return this.request("POST", "/sessions", classId ? { class_id: classId } : {});
+    return this.request(
+      "POST",
+      "/sessions",
+      classId ? { class_id: classId } : {},
+    );
   }
   listSessions(): Promise<SessionInfo[]> {
     return this.request("GET", "/sessions");

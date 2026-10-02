@@ -10,15 +10,15 @@ Managed by SQLAlchemy 2.0 models + Alembic migrations
 (`services/api/migrations`). Enums are stored as `VARCHAR` + `CHECK`
 (`native_enum=False`) to avoid cross-table type collisions.
 
-| Table | Columns |
-|---|---|
-| `users` | `id` uuid PK · `username` text unique · `password_hash` text (bcrypt) · `role` {instructor,student} · `created_at` |
-| `classes` | `id` uuid PK · `instructor_id` → users · `name` text · `created_at` |
-| `sessions` | `id` uuid PK · `instructor_id` → users · `class_id?` → classes · `state` {created,live,paused,ended} · `created_at` · `started_at?` · `ended_at?` |
-| `session_members` | PK(`session_id`→sessions, `user_id`→users) · `role` · `approved` bool · `joined_at` — **server-side membership source of truth** |
-| `documents` | `id` uuid PK · `session_id` → sessions · `relative_path` text · `checkpoint_version` int · `created_at` — **relative paths only; never client absolute paths** |
-| `document_snapshots` | `id` uuid PK · `document_id` → documents · `version` int · `content` text · `created_at` |
-| `audit_events` | `id` uuid PK · `session_id?` · `user_id?` · `type` text · `metadata` jsonb · `created_at` — join/leave/control/resync (see [OBSERVABILITY.md](./OBSERVABILITY.md)) |
+| Table                | Columns                                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `users`              | `id` uuid PK · `username` text unique · `password_hash` text (bcrypt) · `role` {instructor,student} · `created_at`                                                 |
+| `classes`            | `id` uuid PK · `instructor_id` → users · `name` text · `created_at`                                                                                                |
+| `sessions`           | `id` uuid PK · `instructor_id` → users · `class_id?` → classes · `state` {created,live,paused,ended} · `created_at` · `started_at?` · `ended_at?`                  |
+| `session_members`    | PK(`session_id`→sessions, `user_id`→users) · `role` · `approved` bool · `joined_at` — **server-side membership source of truth**                                   |
+| `documents`          | `id` uuid PK · `session_id` → sessions · `relative_path` text · `checkpoint_version` int · `created_at` — **relative paths only; never client absolute paths**     |
+| `document_snapshots` | `id` uuid PK · `document_id` → documents · `version` int · `content` text · `created_at`                                                                           |
+| `audit_events`       | `id` uuid PK · `session_id?` · `user_id?` · `type` text · `metadata` jsonb · `created_at` — join/leave/control/resync (see [OBSERVABILITY.md](./OBSERVABILITY.md)) |
 
 Indexes: `users.username` (unique), `classes.instructor_id`, `sessions.instructor_id`,
 `sessions.class_id`, `documents.session_id`, `document_snapshots.document_id`,
@@ -28,14 +28,14 @@ Indexes: `users.username` (unique), `classes.instructor_id`, `sessions.instructo
 
 Keys are per-document or per-session; all are ephemeral and bounded.
 
-| Key | Type | Purpose |
-|---|---|---|
-| `doc:{id}:version` | string (int) | authoritative current version (Lua `GET`/`SET`) |
-| `doc:{id}:ops` | stream (`MAXLEN ~ op_buffer_window`) | op buffer for replay: `{version, baseVersion, clientOpId, edits, author, ts}` |
-| `doc:{id}:dedup` | hash (TTL 3600 s) | `clientOpId → version` for idempotency |
-| `doc:{id}:snapshot` | string (JSON) | latest teacher checkpoint `{version, content}` (snapshot-fallback cache) |
-| `session:{id}:presence` | hash | `userId → {role, since}` |
-| `session:{id}:events` | pub/sub channel | `doc_update` / `presence_update` fan-out |
+| Key                     | Type                                 | Purpose                                                                       |
+| ----------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| `doc:{id}:version`      | string (int)                         | authoritative current version (Lua `GET`/`SET`)                               |
+| `doc:{id}:ops`          | stream (`MAXLEN ~ op_buffer_window`) | op buffer for replay: `{version, baseVersion, clientOpId, edits, author, ts}` |
+| `doc:{id}:dedup`        | hash (TTL 3600 s)                    | `clientOpId → version` for idempotency                                        |
+| `doc:{id}:snapshot`     | string (JSON)                        | latest teacher checkpoint `{version, content}` (snapshot-fallback cache)      |
+| `session:{id}:presence` | hash                                 | `userId → {role, since}`                                                      |
+| `session:{id}:events`   | pub/sub channel                      | `doc_update` / `presence_update` fan-out                                      |
 
 The sequencer's **atomicity** (version check + increment + buffer append + dedup)
 is a single Redis Lua script, so concurrent or duplicate ops can never corrupt

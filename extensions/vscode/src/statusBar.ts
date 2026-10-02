@@ -5,7 +5,10 @@ export class StatusBar {
   private readonly item: vscode.StatusBarItem;
 
   constructor() {
-    this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    this.item = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left,
+      100,
+    );
     this.item.show();
     this.set("idle");
   }

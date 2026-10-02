@@ -18,34 +18,41 @@ semantics: [SECURITY.md](./SECURITY.md).
 ## Endpoints [inc 1]
 
 ### `POST /auth/login`
+
 Request `{ "username": string, "password": string }`.
 Response `200 { "access_token": string, "token_type": "bearer", "user_id": uuid, "role": "instructor"|"student" }`.
 Errors: `401` invalid credentials.
 
-### `POST /sessions`  *(instructor only)*
+### `POST /sessions` _(instructor only)_
+
 Auth required. Creates a session owned by the caller (state `created`) and adds
 the caller as an approved instructor member.
 Response `201 { "id": uuid, "instructor_id": uuid, "state": "created", "created_at": datetime }`.
 Errors: `401` missing/invalid token; `403` caller is not an instructor.
 
-### `GET /sessions/{session_id}`  *(member or owning instructor)*
+### `GET /sessions/{session_id}` _(member or owning instructor)_
+
 Response `200 { "id", "instructor_id", "class_id?", "state", "created_at", "started_at?", "ended_at?" }`.
 Errors: `401`; `404` unknown session; `403` not a member.
 
 ### `GET /healthz`
+
 Response `200 { "status": "ok" }` (liveness/readiness).
 
 ## Endpoints [inc 3]
 
-### `POST /classes` *(instructor only)* · `GET /classes`
+### `POST /classes` _(instructor only)_ · `GET /classes`
+
 Create `{ "name": string }` → `201 { id, instructor_id, name, created_at }`.
 List the caller's classes → `200 [ … ]`. Errors: `401`; `403` on create by a non-instructor.
 
 ### `POST /sessions/{session_id}/join`
+
 Any authenticated user becomes an approved member (idempotent) → `200 <session>`.
 Errors: `401`; `404` unknown session; `409` session already ended.
 
-### `POST /sessions/{session_id}/start|pause|resume|end` *(owning instructor only)*
+### `POST /sessions/{session_id}/start|pause|resume|end` _(owning instructor only)_
+
 State machine `created →start→ live →pause→ paused →resume→ live`, and `*→end→ ended`.
 **pause** and **end** publish a `session_closed` event to connected WebSocket
 clients (reasons `paused`/`ended`). → `200 <session>`.

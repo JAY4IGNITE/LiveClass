@@ -21,13 +21,13 @@ writer; students are read-only replicas.
 Identity = verified `sub`. Role and membership are re-resolved from `users` and
 `session_members` on every request; the token `role` claim is informational only.
 
-| Operation | Rule |
-|---|---|
-| `POST /sessions` | caller role must be `instructor` |
-| `join` a session | caller is the owning instructor **or** a session member, else `FORBIDDEN`/`UNKNOWN_SESSION` (approval-gated join: [planned: inc 3]) |
-| `doc_change` / `checkpoint` | caller is the **owning instructor** of the session (`sessions.instructor_id == user.id`), not merely an instructor-role member, **and** `documentId` belongs to the session, else `FORBIDDEN`/`UNKNOWN_DOCUMENT` |
-| `resync_request` | `documentId` must belong to the joined session |
-| session start/pause/end *[inc 3]* | owning instructor only |
+| Operation                         | Rule                                                                                                                                                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /sessions`                  | caller role must be `instructor`                                                                                                                                                                                 |
+| `join` a session                  | caller is the owning instructor **or** a session member, else `FORBIDDEN`/`UNKNOWN_SESSION` (approval-gated join: [planned: inc 3])                                                                              |
+| `doc_change` / `checkpoint`       | caller is the **owning instructor** of the session (`sessions.instructor_id == user.id`), not merely an instructor-role member, **and** `documentId` belongs to the session, else `FORBIDDEN`/`UNKNOWN_DOCUMENT` |
+| `resync_request`                  | `documentId` must belong to the joined session                                                                                                                                                                   |
+| session start/pause/end _[inc 3]_ | owning instructor only                                                                                                                                                                                           |
 
 ## Session & document lifecycle
 
@@ -55,16 +55,16 @@ machine; students only ever write mirrored documents inside the approved root.
 
 ## Threats → controls
 
-| Threat | Control |
-|---|---|
-| Path traversal | client-side confinement (above); filesystem-security tests |
-| Unauthorized session/document | server-side membership/ownership checks → `FORBIDDEN`/`UNKNOWN_*` |
-| Replay | short-lived JWT; monotonic version + `clientOpId` dedup make replays inert |
-| Malformed/oversized WS messages | ajv/Pydantic schema validation + frame size cap → `INVALID_MESSAGE` |
-| Duplicate operations | `clientOpId` dedup → idempotent `ack` |
-| Invalid/stale versions | atomic `baseVersion` check → `STALE_VERSION`/`INVALID_VERSION` |
-| Rate-limit abuse | per-connection token bucket → `RATE_LIMITED`; auth timeout; per-user/IP caps [planned: inc 5/7] |
-| Transport exposure | TLS terminated at nginx; backend trusts `X-Forwarded-For` only from the proxy |
+| Threat                          | Control                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Path traversal                  | client-side confinement (above); filesystem-security tests                                      |
+| Unauthorized session/document   | server-side membership/ownership checks → `FORBIDDEN`/`UNKNOWN_*`                               |
+| Replay                          | short-lived JWT; monotonic version + `clientOpId` dedup make replays inert                      |
+| Malformed/oversized WS messages | ajv/Pydantic schema validation + frame size cap → `INVALID_MESSAGE`                             |
+| Duplicate operations            | `clientOpId` dedup → idempotent `ack`                                                           |
+| Invalid/stale versions          | atomic `baseVersion` check → `STALE_VERSION`/`INVALID_VERSION`                                  |
+| Rate-limit abuse                | per-connection token bucket → `RATE_LIMITED`; auth timeout; per-user/IP caps [planned: inc 5/7] |
+| Transport exposure              | TLS terminated at nginx; backend trusts `X-Forwarded-For` only from the proxy                   |
 
 See [PROTOCOL.md](./PROTOCOL.md) §8 for error semantics and [TESTING.md](./TESTING.md)
 for the tests covering each control.

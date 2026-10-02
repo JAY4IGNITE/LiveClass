@@ -11,17 +11,17 @@ a dropped student reconnects and re-converges — all authorized server-side.
 
 ## Monorepo layout
 
-| Path | Contents |
-|------|----------|
-| `packages/protocol` | Wire-protocol **JSON Schema source of truth** + generated Pydantic models |
-| `packages/shared-types` | Generated TS types + ajv validators (single TS import surface) |
-| `packages/sync-engine` | IDE-independent client synchronization core (pure TS) |
-| `services/api` | FastAPI HTTP API + shared core (config, DB, auth, authz) |
-| `services/collaboration` | WebSocket gateway + authoritative Redis-Lua sequencer |
-| `extensions/vscode` | VS Code extension (thin host adapter) |
-| `apps/web` | React dashboard (stub) |
-| `infrastructure/` | nginx, redis config |
-| `tests/` | unit, integration, websocket, e2e, load |
+| Path                     | Contents                                                                  |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `packages/protocol`      | Wire-protocol **JSON Schema source of truth** + generated Pydantic models |
+| `packages/shared-types`  | Generated TS types + ajv validators (single TS import surface)            |
+| `packages/sync-engine`   | IDE-independent client synchronization core (pure TS)                     |
+| `services/api`           | FastAPI HTTP API + shared core (config, DB, auth, authz)                  |
+| `services/collaboration` | WebSocket gateway + authoritative Redis-Lua sequencer                     |
+| `extensions/vscode`      | VS Code extension (thin host adapter)                                     |
+| `apps/web`               | React dashboard (stub)                                                    |
+| `infrastructure/`        | nginx, redis config                                                       |
+| `tests/`                 | unit, integration, websocket, e2e, load                                   |
 
 ## Prerequisites
 
@@ -48,12 +48,14 @@ Make sure your local Postgres and Redis are running on the ports specified in yo
 Once the backend is running, you can use the LiveClass VS Code extension to teach or learn.
 
 ### Teacher (Instructor) Workflow
+
 1. **Open your project:** Open the code you want to teach in a new VS Code window.
 2. **Sign In:** Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **`LiveClass: Sign In`**. Log in using teacher credentials (e.g., username: `teacher1`, password: `password123` if you ran the seed script).
-3. **Start Sharing:** Run **`LiveClass (Teacher): Start Sharing`** and select the active session. 
+3. **Start Sharing:** Run **`LiveClass (Teacher): Start Sharing`** and select the active session.
 4. **Teach:** Simply start typing! The extension tracks your active documents and securely broadcasts your edits in real-time to the central gateway.
 
 ### Student Workflow
+
 1. **Prepare Workspace:** Open an empty folder in VS Code where you want the class files to be mirrored.
 2. **Sign In:** Run **`LiveClass: Sign In`** from the Command Palette using student credentials (e.g., username: `student1`, password: `password123`).
 3. **Join Session:** Run **`LiveClass (Student): Join Session`** and select the active class session.

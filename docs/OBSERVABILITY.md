@@ -23,16 +23,16 @@ Planned event types: `session.share`, `session.start`, `session.pause`,
 
 Metric definitions (the engineering targets from the product rules):
 
-| Metric | Definition |
-|---|---|
-| connection success rate | successful WS joins ÷ attempts |
-| latency p50/p95/p99 | teacher edit → student apply, per `doc_update` |
-| messages/sec | `doc_update` fan-out throughput |
-| reconnect recovery time | drop → re-converged to current version |
+| Metric                   | Definition                                                |
+| ------------------------ | --------------------------------------------------------- |
+| connection success rate  | successful WS joins ÷ attempts                            |
+| latency p50/p95/p99      | teacher edit → student apply, per `doc_update`            |
+| messages/sec             | `doc_update` fan-out throughput                           |
+| reconnect recovery time  | drop → re-converged to current version                    |
 | synchronization failures | students whose final `(contentHash, version)` ≠ teacher's |
-| CPU / memory | gateway process resource use |
-| Redis latency | sequencer Lua + pub/sub round-trip |
-| PostgreSQL latency | query/commit time |
+| CPU / memory             | gateway process resource use                              |
+| Redis latency            | sequencer Lua + pub/sub round-trip                        |
+| PostgreSQL latency       | query/commit time                                         |
 
 **Current measurement:** the reproducible load test (`make load-test STUDENTS=N`
 → `tests/load/loadtest.ts`) drives 1 teacher + N students through the full

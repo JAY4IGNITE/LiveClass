@@ -42,7 +42,10 @@ export class FakeTransport implements Transport {
   }
 }
 
-export function env(type: string, extra: Record<string, unknown> = {}): Record<string, unknown> {
+export function env(
+  type: string,
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
   return { protocol: "1.0", type, msgId: MID, ts: 1, ...extra };
 }
 

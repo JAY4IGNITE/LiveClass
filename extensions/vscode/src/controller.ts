@@ -33,13 +33,25 @@ export class LiveClassController {
   private readonly _onDidChange = new vscode.EventEmitter<void>();
   public readonly onDidChange = this._onDidChange.event;
 
-  public get currentRole(): Role | null { return this.role; }
-  public get activeSessionId(): string | null { return this.sessionId; }
-  public get isSharing(): boolean { return this.share !== null; }
-  public get isObserving(): boolean { return this.mirror !== null; }
-  public get isFollowing(): boolean { return this.following; }
+  public get currentRole(): Role | null {
+    return this.role;
+  }
+  public get activeSessionId(): string | null {
+    return this.sessionId;
+  }
+  public get isSharing(): boolean {
+    return this.share !== null;
+  }
+  public get isObserving(): boolean {
+    return this.mirror !== null;
+  }
+  public get isFollowing(): boolean {
+    return this.following;
+  }
 
-  public get activeProject(): string | null { return this.projectDoc?.uri.fsPath || null; }
+  public get activeProject(): string | null {
+    return this.projectDoc?.uri.fsPath || null;
+  }
   private projectDoc: vscode.TextDocument | null = null;
 
   constructor(
@@ -63,7 +75,9 @@ export class LiveClassController {
   }
 
   async login(): Promise<void> {
-    const username = await vscode.window.showInputBox({ prompt: "LiveClass username" });
+    const username = await vscode.window.showInputBox({
+      prompt: "LiveClass username",
+    });
     if (!username) return;
     const password = await vscode.window.showInputBox({
       prompt: "LiveClass password",
@@ -85,14 +99,22 @@ export class LiveClassController {
 
   async register(): Promise<void> {
     const role = await vscode.window.showQuickPick(
-      [{ label: "Instructor", id: "instructor" }, { label: "Student", id: "student" }],
-      { placeHolder: "Select role for new account" }
+      [
+        { label: "Instructor", id: "instructor" },
+        { label: "Student", id: "student" },
+      ],
+      { placeHolder: "Select role for new account" },
     );
     if (!role) return;
 
-    const username = await vscode.window.showInputBox({ prompt: "Choose a Username" });
+    const username = await vscode.window.showInputBox({
+      prompt: "Choose a Username",
+    });
     if (!username) return;
-    const password = await vscode.window.showInputBox({ prompt: "Choose a Password", password: true });
+    const password = await vscode.window.showInputBox({
+      prompt: "Choose a Password",
+      password: true,
+    });
     if (!password) return;
 
     try {
@@ -139,7 +161,10 @@ export class LiveClassController {
         const pick = await vscode.window.showQuickPick(
           [
             { label: "(no class)", id: undefined as string | undefined },
-            ...classes.map((c) => ({ label: c.name, id: c.id as string | undefined })),
+            ...classes.map((c) => ({
+              label: c.name,
+              id: c.id as string | undefined,
+            })),
           ],
           { placeHolder: "Attach the session to a class?" },
         );
@@ -163,8 +188,12 @@ export class LiveClassController {
         return;
       }
       const pick = await vscode.window.showQuickPick(
-        sessions.map(s => ({ label: `Session ${s.id.slice(0, 8)} (${s.state})`, description: new Date(s.created_at).toLocaleString(), id: s.id })),
-        { placeHolder: "Select a previous session to resume" }
+        sessions.map((s) => ({
+          label: `Session ${s.id.slice(0, 8)} (${s.state})`,
+          description: new Date(s.created_at).toLocaleString(),
+          id: s.id,
+        })),
+        { placeHolder: "Select a previous session to resume" },
       );
       if (!pick) return;
       this.sessionId = pick.id;
@@ -179,7 +208,9 @@ export class LiveClassController {
     if (!this.requireRole("instructor")) return;
     const doc = vscode.window.activeTextEditor?.document;
     if (!doc) {
-      void vscode.window.showErrorMessage("Open the file to share, then select project");
+      void vscode.window.showErrorMessage(
+        "Open the file to share, then select project",
+      );
       return;
     }
     this.projectDoc = doc;
@@ -192,9 +223,12 @@ export class LiveClassController {
       void vscode.window.showErrorMessage("Create a session first");
       return;
     }
-    const doc = this.projectDoc ?? vscode.window.activeTextEditor?.document ?? null;
+    const doc =
+      this.projectDoc ?? vscode.window.activeTextEditor?.document ?? null;
     if (!doc) {
-      void vscode.window.showErrorMessage("Select a project/file to share first");
+      void vscode.window.showErrorMessage(
+        "Select a project/file to share first",
+      );
       return;
     }
     this.projectDoc = doc;
@@ -206,9 +240,9 @@ export class LiveClassController {
         if (workspaceFolder) {
           this.share?.shareWorkspace(workspaceFolder.uri);
         }
-        
+
         // Ensure the initially selected file is shared if it exists in the server state
-        const first = documents.find(d => d.documentId) ?? documents[0];
+        const first = documents.find((d) => d.documentId) ?? documents[0];
         if (first) {
           this.share?.shareSingleDocument(first.documentId, doc);
         }
@@ -230,7 +264,9 @@ export class LiveClassController {
   }
 
   viewStudents(): void {
-    const students = this.members.filter((m) => m.role === "student" && m.state === "joined");
+    const students = this.members.filter(
+      (m) => m.role === "student" && m.state === "joined",
+    );
     if (students.length === 0) {
       void vscode.window.showInformationMessage("No students connected");
       return;
@@ -279,7 +315,9 @@ export class LiveClassController {
   copySessionId(): void {
     if (this.sessionId) {
       void vscode.env.clipboard.writeText(this.sessionId);
-      void vscode.window.showInformationMessage(`Copied session ID: ${this.sessionId}`);
+      void vscode.window.showInformationMessage(
+        `Copied session ID: ${this.sessionId}`,
+      );
     }
   }
   // ---- student ----
@@ -324,7 +362,9 @@ export class LiveClassController {
       );
       return;
     }
-    const id = await vscode.window.showInputBox({ prompt: "Session id to join" });
+    const id = await vscode.window.showInputBox({
+      prompt: "Session id to join",
+    });
     if (!id) return;
     try {
       await this.api.joinSession(id);
@@ -334,8 +374,10 @@ export class LiveClassController {
     }
     this.sessionId = id;
     this.connect((engine) => {
-      this.mirror = new StudentMirror(engine, this.gate, (msg) =>
-        void vscode.window.showWarningMessage(msg),
+      this.mirror = new StudentMirror(
+        engine,
+        this.gate,
+        (msg) => void vscode.window.showWarningMessage(msg),
       );
       engine.on("docChanged", (e) => {
         if (this.following) this.reveal(e.documentId);
@@ -345,8 +387,9 @@ export class LiveClassController {
           this.mirror?.showTeacherCursor(e.documentId, e.offset, e.length);
         }
       });
-      engine.on("sessionClosed", (reason) =>
-        void vscode.window.showWarningMessage(`Session ${reason}`),
+      engine.on(
+        "sessionClosed",
+        (reason) => void vscode.window.showWarningMessage(`Session ${reason}`),
       );
     });
     this.status.set("observing");
@@ -383,8 +426,10 @@ export class LiveClassController {
     }
     const saveUri = await vscode.window.showSaveDialog({
       filters: { "ZIP files": ["zip"] },
-      defaultUri: vscode.Uri.file(this.pendingWorkspace.fsPath + "/LiveClass_Export.zip"),
-      title: "Export LiveClass Project"
+      defaultUri: vscode.Uri.file(
+        this.pendingWorkspace.fsPath + "/LiveClass_Export.zip",
+      ),
+      title: "Export LiveClass Project",
     });
     if (!saveUri) return;
 
@@ -393,7 +438,9 @@ export class LiveClassController {
       const zip = new AdmZip();
       zip.addLocalFolder(this.pendingWorkspace.fsPath);
       zip.writeZip(saveUri.fsPath);
-      void vscode.window.showInformationMessage(`Successfully exported to ${saveUri.fsPath}`);
+      void vscode.window.showInformationMessage(
+        `Successfully exported to ${saveUri.fsPath}`,
+      );
     } catch (err) {
       this.fail("Export failed", err);
     }
@@ -417,7 +464,10 @@ export class LiveClassController {
     });
     this.engine = engine;
     setup(engine);
-    engine.on("error", (e) => void vscode.window.showErrorMessage(`LiveClass error: ${e.code}`));
+    engine.on(
+      "error",
+      (e) => void vscode.window.showErrorMessage(`LiveClass error: ${e.code}`),
+    );
     this.conn = new ConnectionManager(engine, {
       reconnect: true,
       onState: (state) => this.status.set(state),
@@ -436,7 +486,9 @@ export class LiveClassController {
 
   private requireRole(role: Role): boolean {
     if (this.role !== role) {
-      void vscode.window.showErrorMessage(`This action requires the ${role} role (sign in first)`);
+      void vscode.window.showErrorMessage(
+        `This action requires the ${role} role (sign in first)`,
+      );
       return false;
     }
     return true;

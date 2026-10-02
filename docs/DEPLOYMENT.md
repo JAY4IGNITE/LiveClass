@@ -32,27 +32,27 @@ in `.env.example` match. The app runs via `uv`/`uvicorn`.
 
 ## Configuration
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DATABASE_URL` | `postgresql+asyncpg://liveclass:liveclass@127.0.0.1:5433/liveclass` | Postgres DSN |
-| `REDIS_URL` | `redis://127.0.0.1:6380/0` | Redis URL |
-| `JWT_SECRET` / `JWT_ISSUER` / `JWT_AUDIENCE` | dev / `liveclass` / `liveclass-clients` | token signing (secret ≥ 32 bytes) |
-| `JWT_EXPIRES_SECONDS` | 3600 | token lifetime |
-| `OP_BUFFER_WINDOW` | 512 | Redis op-buffer `MAXLEN` (N) |
-| `SNAPSHOT_INTERVAL` | 128 | checkpoint cadence (K); invariant **K < N** (D6), enforced at config load |
-| `WS_MAX_MSG_BYTES` | 262144 | max inbound frame |
-| `WS_MSGS_PER_SEC` | 50 | per-connection rate |
-| `WS_HEARTBEAT_INTERVAL_MS` | 15000 | advertised heartbeat |
-| `API_HOST` / `API_PORT` / `PROTOCOL_VERSION` | `0.0.0.0` / 8000 / `1.0` | server + protocol |
+| Variable                                     | Default                                                             | Meaning                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `DATABASE_URL`                               | `postgresql+asyncpg://liveclass:liveclass@127.0.0.1:5433/liveclass` | Postgres DSN                                                              |
+| `REDIS_URL`                                  | `redis://127.0.0.1:6380/0`                                          | Redis URL                                                                 |
+| `JWT_SECRET` / `JWT_ISSUER` / `JWT_AUDIENCE` | dev / `liveclass` / `liveclass-clients`                             | token signing (secret ≥ 32 bytes)                                         |
+| `JWT_EXPIRES_SECONDS`                        | 3600                                                                | token lifetime                                                            |
+| `OP_BUFFER_WINDOW`                           | 512                                                                 | Redis op-buffer `MAXLEN` (N)                                              |
+| `SNAPSHOT_INTERVAL`                          | 128                                                                 | checkpoint cadence (K); invariant **K < N** (D6), enforced at config load |
+| `WS_MAX_MSG_BYTES`                           | 262144                                                              | max inbound frame                                                         |
+| `WS_MSGS_PER_SEC`                            | 50                                                                  | per-connection rate                                                       |
+| `WS_HEARTBEAT_INTERVAL_MS`                   | 15000                                                               | advertised heartbeat                                                      |
+| `API_HOST` / `API_PORT` / `PROTOCOL_VERSION` | `0.0.0.0` / 8000 / `1.0`                                            | server + protocol                                                         |
 
 ## CI (`.github/workflows/ci.yml`)
 
-| Job | Does |
-|---|---|
-| `node-unit` | `pnpm install`, `pnpm -w typecheck`, `pnpm -w test` |
-| `python-unit` | `uv sync`, `ruff check`, `pytest -m "not integration"` |
-| `codegen-drift` | regenerate protocol artifacts, fail if committed copies drift |
-| `integration` | Start local DBs, `alembic upgrade`, `pytest -m integration`, e2e, load smoke (N=5) |
+| Job             | Does                                                                               |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `node-unit`     | `pnpm install`, `pnpm -w typecheck`, `pnpm -w test`                                |
+| `python-unit`   | `uv sync`, `ruff check`, `pytest -m "not integration"`                             |
+| `codegen-drift` | regenerate protocol artifacts, fail if committed copies drift                      |
+| `integration`   | Start local DBs, `alembic upgrade`, `pytest -m integration`, e2e, load smoke (N=5) |
 
 ## Scaling & release path
 

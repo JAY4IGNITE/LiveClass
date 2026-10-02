@@ -10,7 +10,11 @@ import type { ApprovalGate } from "./workspaceApproval";
 export function changesToEdits(
   changes: readonly vscode.TextDocumentContentChangeEvent[],
 ): Edit[] {
-  return changes.map((c) => ({ offset: c.rangeOffset, length: c.rangeLength, text: c.text }));
+  return changes.map((c) => ({
+    offset: c.rangeOffset,
+    length: c.rangeLength,
+    text: c.text,
+  }));
 }
 
 /**
@@ -39,7 +43,10 @@ export class StudentMirror {
 
   private register(documentId: string, relativePath: string): void {
     try {
-      this.uris.set(documentId, vscode.Uri.file(this.gate.resolve(relativePath)));
+      this.uris.set(
+        documentId,
+        vscode.Uri.file(this.gate.resolve(relativePath)),
+      );
     } catch (err) {
       this.onError?.(`Refused unsafe path "${relativePath}": ${String(err)}`);
     }
@@ -51,15 +58,27 @@ export class StudentMirror {
     const edit = new vscode.WorkspaceEdit();
     try {
       const doc = await vscode.workspace.openTextDocument(uri);
-      const whole = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
+      const whole = new vscode.Range(
+        doc.positionAt(0),
+        doc.positionAt(doc.getText().length),
+      );
       edit.replace(uri, whole, content);
     } catch {
-      edit.createFile(uri, { overwrite: true, contents: Buffer.from(content, "utf8") });
+      edit.createFile(uri, {
+        overwrite: true,
+        contents: Buffer.from(content, "utf8"),
+      });
     }
     await vscode.workspace.applyEdit(edit);
   }
 
-  private async applyTreeUpdate(msg: { op: string; kind: string; path: string; newPath?: string; documentId?: string }): Promise<void> {
+  private async applyTreeUpdate(msg: {
+    op: string;
+    kind: string;
+    path: string;
+    newPath?: string;
+    documentId?: string;
+  }): Promise<void> {
     try {
       const uri = vscode.Uri.file(this.gate.resolve(msg.path));
       const edit = new vscode.WorkspaceEdit();
@@ -76,7 +95,7 @@ export class StudentMirror {
         const newUri = vscode.Uri.file(this.gate.resolve(msg.newPath));
         edit.renameFile(uri, newUri, { overwrite: true });
         if (msg.documentId) {
-            this.register(msg.documentId, msg.newPath);
+          this.register(msg.documentId, msg.newPath);
         }
       }
       await vscode.workspace.applyEdit(edit);
@@ -84,26 +103,37 @@ export class StudentMirror {
       this.onError?.(`Failed to apply tree update: ${String(err)}`);
     }
   }
-  private teacherCursorDecoration = vscode.window.createTextEditorDecorationType({
-    borderStyle: "solid",
-    borderWidth: "0 0 0 2px",
-    borderColor: "blue",
-    backgroundColor: "rgba(0, 0, 255, 0.2)"
-  });
+  private teacherCursorDecoration =
+    vscode.window.createTextEditorDecorationType({
+      borderStyle: "solid",
+      borderWidth: "0 0 0 2px",
+      borderColor: "blue",
+      backgroundColor: "rgba(0, 0, 255, 0.2)",
+    });
 
-  async showTeacherCursor(documentId: string, offset: number, length: number): Promise<void> {
+  async showTeacherCursor(
+    documentId: string,
+    offset: number,
+    length: number,
+  ): Promise<void> {
     const uri = this.uris.get(documentId);
     if (!uri) return;
     try {
       const doc = await vscode.workspace.openTextDocument(uri);
-      const editor = await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: true });
-      
+      const editor = await vscode.window.showTextDocument(doc, {
+        preserveFocus: true,
+        preview: true,
+      });
+
       const activePos = doc.positionAt(offset);
       const anchorPos = doc.positionAt(offset + length);
-      
+
       // Auto-scroll to teacher cursor
-      editor.revealRange(new vscode.Range(activePos, activePos), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
-      
+      editor.revealRange(
+        new vscode.Range(activePos, activePos),
+        vscode.TextEditorRevealType.InCenterIfOutsideViewport,
+      );
+
       const range = new vscode.Range(activePos, anchorPos);
       editor.setDecorations(this.teacherCursorDecoration, [range]);
     } catch {
@@ -126,33 +156,50 @@ export class TeacherShare {
         // Brand new session: proactively discover and share all workspace files
         try {
           // Ignore node_modules, .git, .venv, etc. to prevent overloading
-          const exclude = "**/{node_modules,.git,.venv,dist,build,out,target,bin,obj}/**";
+          const exclude =
+            "**/{node_modules,.git,.venv,dist,build,out,target,bin,obj}/**";
           // Limit to 50 files to avoid massive uploads
-          const files = await vscode.workspace.findFiles(new vscode.RelativePattern(this.rootUri, "**/*"), exclude, 50);
-          
+          const files = await vscode.workspace.findFiles(
+            new vscode.RelativePattern(this.rootUri, "**/*"),
+            exclude,
+            50,
+          );
+
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (!file) continue;
             const relativePath = vscode.workspace.asRelativePath(file, false);
             const docId = crypto.randomUUID();
             this.uriToDocId.set(file.fsPath, docId);
-            
+
             // Queue the creation of the file
-            this.engine.localFsEvent("create", "file", relativePath, undefined, docId);
-            
+            this.engine.localFsEvent(
+              "create",
+              "file",
+              relativePath,
+              undefined,
+              docId,
+            );
+
             // Queue the content of the file
             try {
-                const content = await vscode.workspace.fs.readFile(file);
-                // Don't send huge files (e.g. > 100KB)
-                if (content.byteLength < 100000) {
-                    this.engine.localEdit(docId, [{ offset: 0, length: 0, text: new TextDecoder().decode(content) }]);
-                }
+              const content = await vscode.workspace.fs.readFile(file);
+              // Don't send huge files (e.g. > 100KB)
+              if (content.byteLength < 100000) {
+                this.engine.localEdit(docId, [
+                  {
+                    offset: 0,
+                    length: 0,
+                    text: new TextDecoder().decode(content),
+                  },
+                ]);
+              }
             } catch (err) {
-                // Ignore read errors
+              // Ignore read errors
             }
-            
+
             // Sleep 50ms to avoid hitting the 50 msgs/sec rate limit
-            await new Promise(r => setTimeout(r, 50));
+            await new Promise((r) => setTimeout(r, 50));
           }
         } catch (err) {
           console.error("Failed to share initial workspace files", err);
@@ -169,7 +216,7 @@ export class TeacherShare {
 
   shareWorkspace(rootUri: vscode.Uri): void {
     this.rootUri = rootUri;
-    
+
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (this.paused) return;
@@ -196,7 +243,13 @@ export class TeacherShare {
           const relativePath = vscode.workspace.asRelativePath(file, false);
           const docId = crypto.randomUUID();
           this.uriToDocId.set(file.fsPath, docId);
-          this.engine.localFsEvent("create", "file", relativePath, undefined, docId);
+          this.engine.localFsEvent(
+            "create",
+            "file",
+            relativePath,
+            undefined,
+            docId,
+          );
         }
       }),
       vscode.workspace.onDidDeleteFiles((e) => {
@@ -224,7 +277,9 @@ export class TeacherShare {
   }
 
   shareSingleDocument(documentId: string, document: vscode.TextDocument): void {
-    this.engine.localEdit(documentId, [{ offset: 0, length: 0, text: document.getText() }]);
+    this.engine.localEdit(documentId, [
+      { offset: 0, length: 0, text: document.getText() },
+    ]);
     this.uriToDocId.set(document.uri.fsPath, documentId);
   }
 

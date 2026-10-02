@@ -34,11 +34,17 @@ export function App() {
   }
 
   return (
-    <main style={{ fontFamily: "sans-serif", maxWidth: 480, margin: "2rem auto" }}>
+    <main
+      style={{ fontFamily: "sans-serif", maxWidth: 480, margin: "2rem auto" }}
+    >
       <h1>LiveClass IDE</h1>
       {!auth ? (
         <form onSubmit={doLogin}>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="username"
+          />
           <input
             type="password"
             value={password}
@@ -53,7 +59,11 @@ export function App() {
             Signed in as <strong>{auth.role}</strong> ({auth.user_id})
           </p>
           <form onSubmit={doLookup}>
-            <input value={sessionId} onChange={(e) => setSessionId(e.target.value)} placeholder="session id" />
+            <input
+              value={sessionId}
+              onChange={(e) => setSessionId(e.target.value)}
+              placeholder="session id"
+            />
             <button type="submit">Look up session</button>
           </form>
           {session && (

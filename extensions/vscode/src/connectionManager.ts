@@ -9,7 +9,10 @@ export interface BackoffOptions {
 }
 
 /** Exponential backoff with proportional jitter, capped at `maxMs`. Pure. */
-export function computeBackoff(attempt: number, opts: BackoffOptions = {}): number {
+export function computeBackoff(
+  attempt: number,
+  opts: BackoffOptions = {},
+): number {
   const base = opts.baseMs ?? 500;
   const max = opts.maxMs ?? 15000;
   const jitter = opts.jitter ?? 0.2;

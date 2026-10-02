@@ -5,7 +5,7 @@ class ActionItem extends vscode.TreeItem {
   constructor(
     label: string,
     public readonly commandId: string,
-    public readonly icon: string
+    public readonly icon: string,
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.command = {
@@ -17,8 +17,12 @@ class ActionItem extends vscode.TreeItem {
 }
 
 export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<ActionItem> {
-  private _onDidChangeTreeData: vscode.EventEmitter<ActionItem | undefined | null | void> = new vscode.EventEmitter<ActionItem | undefined | null | void>();
-  readonly onDidChangeTreeData: vscode.Event<ActionItem | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    ActionItem | undefined | null | void
+  > = new vscode.EventEmitter<ActionItem | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<
+    ActionItem | undefined | null | void
+  > = this._onDidChangeTreeData.event;
 
   constructor(private readonly controller: LiveClassController) {
     this.controller.onDidChange(() => {
@@ -43,52 +47,138 @@ export class LiveClassTreeDataProvider implements vscode.TreeDataProvider<Action
     const role = this.controller.currentRole;
 
     if (role) {
-        items.push(new ActionItem("Sign Out", "liveclass.logout", "sign-out"));
+      items.push(new ActionItem("Sign Out", "liveclass.logout", "sign-out"));
     }
 
     if (!role) {
       items.push(new ActionItem("Sign In", "liveclass.login", "account"));
-      items.push(new ActionItem("Register Account", "liveclass.register", "add"));
+      items.push(
+        new ActionItem("Register Account", "liveclass.register", "add"),
+      );
       return Promise.resolve(items);
     }
 
     if (role === "instructor") {
       if (!this.controller.activeSessionId) {
-        items.push(new ActionItem("Create Class", "liveclass.createClass", "organization"));
-        items.push(new ActionItem("Create Session", "liveclass.createSession", "add"));
-        items.push(new ActionItem("Resume Session", "liveclass.resumeSession", "history"));
+        items.push(
+          new ActionItem(
+            "Create Class",
+            "liveclass.createClass",
+            "organization",
+          ),
+        );
+        items.push(
+          new ActionItem("Create Session", "liveclass.createSession", "add"),
+        );
+        items.push(
+          new ActionItem(
+            "Resume Session",
+            "liveclass.resumeSession",
+            "history",
+          ),
+        );
       } else {
-        items.push(new ActionItem(`Session ID: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`, "liveclass.copySessionId", "key"));
-        
+        items.push(
+          new ActionItem(
+            `Session ID: ${this.controller.activeSessionId.slice(0, 8)} (Copy)`,
+            "liveclass.copySessionId",
+            "key",
+          ),
+        );
+
         // Use a descriptive property or getter to show selected project
         const projectPath = this.controller.activeProject;
-        const projectLabel = projectPath ? `Project: ${projectPath.split(/[\\/]/).pop()}` : "Select Project to Share";
-        
+        const projectLabel = projectPath
+          ? `Project: ${projectPath.split(/[\\/]/).pop()}`
+          : "Select Project to Share";
+
         if (!this.controller.isSharing) {
-          items.push(new ActionItem(projectLabel, "liveclass.selectProject", "folder"));
-          items.push(new ActionItem("Start Sharing", "liveclass.startSharing", "broadcast"));
+          items.push(
+            new ActionItem(projectLabel, "liveclass.selectProject", "folder"),
+          );
+          items.push(
+            new ActionItem(
+              "Start Sharing",
+              "liveclass.startSharing",
+              "broadcast",
+            ),
+          );
         } else {
-          items.push(new ActionItem("View Connected Students", "liveclass.viewStudents", "organization"));
-          items.push(new ActionItem("Pause Sync", "liveclass.pauseSync", "debug-pause"));
-          items.push(new ActionItem("Resume Sync", "liveclass.resumeSync", "play"));
-          items.push(new ActionItem("Stop Sharing", "liveclass.stopSharing", "stop-circle"));
+          items.push(
+            new ActionItem(
+              "View Connected Students",
+              "liveclass.viewStudents",
+              "organization",
+            ),
+          );
+          items.push(
+            new ActionItem("Pause Sync", "liveclass.pauseSync", "debug-pause"),
+          );
+          items.push(
+            new ActionItem("Resume Sync", "liveclass.resumeSync", "play"),
+          );
+          items.push(
+            new ActionItem(
+              "Stop Sharing",
+              "liveclass.stopSharing",
+              "stop-circle",
+            ),
+          );
         }
-        items.push(new ActionItem("End Session", "liveclass.endSession", "trash"));
+        items.push(
+          new ActionItem("End Session", "liveclass.endSession", "trash"),
+        );
       }
     } else if (role === "student") {
       if (!this.controller.activeSessionId) {
-        items.push(new ActionItem("Choose Workspace", "liveclass.chooseWorkspace", "folder"));
-        items.push(new ActionItem("Approve Workspace", "liveclass.approveWorkspace", "check"));
-        items.push(new ActionItem("Join Session", "liveclass.joinSession", "link"));
+        items.push(
+          new ActionItem(
+            "Choose Workspace",
+            "liveclass.chooseWorkspace",
+            "folder",
+          ),
+        );
+        items.push(
+          new ActionItem(
+            "Approve Workspace",
+            "liveclass.approveWorkspace",
+            "check",
+          ),
+        );
+        items.push(
+          new ActionItem("Join Session", "liveclass.joinSession", "link"),
+        );
       } else {
-        items.push(new ActionItem(`Connected: ${this.controller.activeSessionId.slice(0, 8)}`, "liveclass.copySessionId", "key"));
+        items.push(
+          new ActionItem(
+            `Connected: ${this.controller.activeSessionId.slice(0, 8)}`,
+            "liveclass.copySessionId",
+            "key",
+          ),
+        );
         if (!this.controller.isFollowing) {
-          items.push(new ActionItem("Follow Teacher", "liveclass.followTeacher", "eye"));
+          items.push(
+            new ActionItem("Follow Teacher", "liveclass.followTeacher", "eye"),
+          );
         } else {
-          items.push(new ActionItem("Stop Following", "liveclass.stopFollowing", "eye-closed"));
+          items.push(
+            new ActionItem(
+              "Stop Following",
+              "liveclass.stopFollowing",
+              "eye-closed",
+            ),
+          );
         }
-        items.push(new ActionItem("Export to ZIP", "liveclass.exportWorkspace", "archive"));
-        items.push(new ActionItem("Leave Session", "liveclass.leaveSession", "sign-out"));
+        items.push(
+          new ActionItem(
+            "Export to ZIP",
+            "liveclass.exportWorkspace",
+            "archive",
+          ),
+        );
+        items.push(
+          new ActionItem("Leave Session", "liveclass.leaveSession", "sign-out"),
+        );
       }
     }
 

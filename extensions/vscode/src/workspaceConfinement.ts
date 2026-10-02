@@ -31,14 +31,19 @@ export function confineRelativePath(
 ): string {
   const caseInsensitive = impl.sep === "\\";
   if (!relativePath) throw new ConfinementError("empty path");
-  if (impl.isAbsolute(relativePath)) throw new ConfinementError("absolute path rejected");
-  if (/^[a-zA-Z]:/.test(relativePath)) throw new ConfinementError("drive-relative path rejected");
-  if (/^[\\/]{2}/.test(relativePath)) throw new ConfinementError("UNC path rejected");
-  if (/^[\\/]/.test(relativePath)) throw new ConfinementError("leading-separator path rejected");
+  if (impl.isAbsolute(relativePath))
+    throw new ConfinementError("absolute path rejected");
+  if (/^[a-zA-Z]:/.test(relativePath))
+    throw new ConfinementError("drive-relative path rejected");
+  if (/^[\\/]{2}/.test(relativePath))
+    throw new ConfinementError("UNC path rejected");
+  if (/^[\\/]/.test(relativePath))
+    throw new ConfinementError("leading-separator path rejected");
 
   for (const segment of relativePath.split(/[\\/]/)) {
     if (segment === "" || segment === ".") continue;
-    if (segment === "..") throw new ConfinementError("parent traversal rejected");
+    if (segment === "..")
+      throw new ConfinementError("parent traversal rejected");
     if (caseInsensitive && RESERVED.test(segment)) {
       throw new ConfinementError(`reserved name rejected: ${segment}`);
     }

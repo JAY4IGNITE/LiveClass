@@ -2,12 +2,7 @@ import type { Message, PresenceMember } from "@liveclass/shared-types";
 
 /** Connection lifecycle state (transport + protocol handshake). */
 export type ConnectionState =
-  | "idle"
-  | "connecting"
-  | "authenticating"
-  | "joining"
-  | "live"
-  | "closed";
+  "idle" | "connecting" | "authenticating" | "joining" | "live" | "closed";
 
 export type Role = "instructor" | "student";
 
@@ -49,14 +44,33 @@ export interface SyncEngineEvents {
   stateChange: (state: ConnectionState) => void;
   connected: (info: { userId: string; role: Role }) => void;
   welcome: (
-    documents: ReadonlyArray<{ documentId: string; relativePath: string; version: number }>,
+    documents: ReadonlyArray<{
+      documentId: string;
+      relativePath: string;
+      version: number;
+    }>,
   ) => void;
-  docChanged: (e: { documentId: string; content: string; version: number }) => void;
+  docChanged: (e: {
+    documentId: string;
+    content: string;
+    version: number;
+  }) => void;
   ack: (e: { clientOpId: string; version: number }) => void;
   presence: (members: PresenceMember[]) => void;
   sessionClosed: (reason: string) => void;
   error: (e: { code: string; message: string }) => void;
-  treeUpdate: (e: { op: "create" | "delete" | "rename"; kind: "file" | "dir"; path: string; newPath?: string; treeVersion: number; documentId?: string }) => void;
-  cursorUpdate: (e: { documentId: string; offset: number; length: number }) => void;
+  treeUpdate: (e: {
+    op: "create" | "delete" | "rename";
+    kind: "file" | "dir";
+    path: string;
+    newPath?: string;
+    treeVersion: number;
+    documentId?: string;
+  }) => void;
+  cursorUpdate: (e: {
+    documentId: string;
+    offset: number;
+    length: number;
+  }) => void;
   closed: () => void;
 }

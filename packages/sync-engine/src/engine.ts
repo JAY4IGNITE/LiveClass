@@ -53,7 +53,10 @@ export class SyncEngine {
     this.transport = opts.transport;
     this.token = opts.token;
     this.sessionId = opts.sessionId;
-    this.clientInfo = opts.clientInfo ?? { ideType: "headless", clientVersion: "0.0.0" };
+    this.clientInfo = opts.clientInfo ?? {
+      ideType: "headless",
+      clientVersion: "0.0.0",
+    };
     this.validate = opts.validate ?? parseMessage;
     this.now = opts.now ?? (() => Date.now());
     this.genId = opts.genId ?? (() => crypto.randomUUID());
@@ -92,7 +95,10 @@ export class SyncEngine {
     return this.role;
   }
 
-  on<K extends keyof SyncEngineEvents>(event: K, handler: SyncEngineEvents[K]): () => void {
+  on<K extends keyof SyncEngineEvents>(
+    event: K,
+    handler: SyncEngineEvents[K],
+  ): () => void {
     const set = this.listeners.get(event) ?? new Set<Listener>();
     set.add(handler as Listener);
     this.listeners.set(event, set);
@@ -111,13 +117,29 @@ export class SyncEngine {
     const clientOpId = this.genId();
     doc.predicted = baseVersion + 1; // optimistic: pipelines before ack (B1)
     doc.pending.set(clientOpId, { baseVersion, edits: normalized });
-    this.send({ type: "doc_change", documentId, baseVersion, clientOpId, edits: normalized });
-    this.emit("docChanged", { documentId, content: doc.content, version: doc.predicted });
+    this.send({
+      type: "doc_change",
+      documentId,
+      baseVersion,
+      clientOpId,
+      edits: normalized,
+    });
+    this.emit("docChanged", {
+      documentId,
+      content: doc.content,
+      version: doc.predicted,
+    });
     return clientOpId;
   }
 
   /** Instructor only: optimistically sequence a filesystem event. */
-  localFsEvent(op: "create" | "delete" | "rename", kind: "file" | "dir", path: string, newPath?: string, documentId?: string): void {
+  localFsEvent(
+    op: "create" | "delete" | "rename",
+    kind: "file" | "dir",
+    path: string,
+    newPath?: string,
+    documentId?: string,
+  ): void {
     if (this.role !== "instructor") {
       throw new Error("Only an instructor may edit the tree");
     }
@@ -199,7 +221,11 @@ export class SyncEngine {
 
   private onOpen(): void {
     this.setState("authenticating");
-    this.send({ type: "connect", token: this.token, clientInfo: this.clientInfo });
+    this.send({
+      type: "connect",
+      token: this.token,
+      clientInfo: this.clientInfo,
+    });
   }
 
   private onClose(): void {
@@ -212,7 +238,10 @@ export class SyncEngine {
     try {
       msg = this.validate(data);
     } catch {
-      this.emit("error", { code: "INVALID_MESSAGE", message: "malformed inbound message" });
+      this.emit("error", {
+        code: "INVALID_MESSAGE",
+        message: "malformed inbound message",
+      });
       return;
     }
     this.dispatch(msg);
@@ -277,10 +306,14 @@ export class SyncEngine {
   }
 
   private onWelcome(
-    documents: ReadonlyArray<{ documentId: string; relativePath: string; version: number }>,
+    documents: ReadonlyArray<{
+      documentId: string;
+      relativePath: string;
+      version: number;
+    }>,
   ): void {
     this.setState("live");
-    const docsToSync = documents.filter(d => {
+    const docsToSync = documents.filter((d) => {
       const doc = this.ensureDoc(d.documentId);
       return d.version > doc.lastApplied;
     });
@@ -288,7 +321,11 @@ export class SyncEngine {
     // Send resync_request in batches to avoid overwhelming the WebSocket (Max 50/sec)
     const processBatch = (startIndex: number) => {
       const batchSize = 10;
-      for (let i = startIndex; i < Math.min(startIndex + batchSize, docsToSync.length); i++) {
+      for (
+        let i = startIndex;
+        i < Math.min(startIndex + batchSize, docsToSync.length);
+        i++
+      ) {
         const d = docsToSync[i]!;
         const doc = this.ensureDoc(d.documentId);
         this.send({
@@ -301,13 +338,17 @@ export class SyncEngine {
         setTimeout(() => processBatch(startIndex + batchSize), 200); // 10 msgs every 200ms
       }
     };
-    
+
     if (docsToSync.length > 0) {
       processBatch(0);
     }
     this.emit("welcome", documents);
   }
-  private onSnapshot(documentId: string, version: number, content: string): void {
+  private onSnapshot(
+    documentId: string,
+    version: number,
+    content: string,
+  ): void {
     const doc = this.ensureDoc(documentId);
     doc.content = content;
     doc.lastApplied = version;
@@ -316,10 +357,18 @@ export class SyncEngine {
     this.emit("docChanged", { documentId, content, version });
   }
 
-  private onTreeUpdate(msg: { op: "create" | "delete" | "rename"; kind: "file" | "dir"; path: string; newPath?: string; treeVersion: number; documentId?: string }): void {
+  private onTreeUpdate(msg: {
+    op: "create" | "delete" | "rename";
+    kind: "file" | "dir";
+    path: string;
+    newPath?: string;
+    treeVersion: number;
+    documentId?: string;
+  }): void {
     if (msg.treeVersion <= this.treeLastApplied) return;
     this.treeLastApplied = msg.treeVersion;
-    if (this.treePredicted < this.treeLastApplied) this.treePredicted = this.treeLastApplied;
+    if (this.treePredicted < this.treeLastApplied)
+      this.treePredicted = this.treeLastApplied;
     this.emit("treeUpdate", msg);
   }
 

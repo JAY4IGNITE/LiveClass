@@ -30,21 +30,50 @@
     "Version": { "type": "integer", "minimum": 0 },
     "EpochMs": { "type": "integer", "minimum": 0 },
     "Role": { "type": "string", "enum": ["instructor", "student"] },
-    "IdeType": { "type": "string", "enum": ["vscode", "headless", "web", "other"] },
+    "IdeType": {
+      "type": "string",
+      "enum": ["vscode", "headless", "web", "other"]
+    },
     "PresenceState": { "type": "string", "enum": ["joined", "left"] },
-    "SessionCloseReason": { "type": "string", "enum": ["ended", "paused", "teacher_disconnected"] },
+    "SessionCloseReason": {
+      "type": "string",
+      "enum": ["ended", "paused", "teacher_disconnected"]
+    },
     "ErrorCode": {
       "type": "string",
-      "enum": ["PROTOCOL_MISMATCH", "UNAUTHORIZED", "FORBIDDEN", "INVALID_MESSAGE", "UNKNOWN_SESSION", "UNKNOWN_DOCUMENT", "STALE_VERSION", "INVALID_VERSION", "DUPLICATE_OP", "RATE_LIMITED", "INTERNAL"]
+      "enum": [
+        "PROTOCOL_MISMATCH",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "INVALID_MESSAGE",
+        "UNKNOWN_SESSION",
+        "UNKNOWN_DOCUMENT",
+        "STALE_VERSION",
+        "INVALID_VERSION",
+        "DUPLICATE_OP",
+        "RATE_LIMITED",
+        "INTERNAL"
+      ]
     },
     "Edit": {
       "type": "object",
       "additionalProperties": false,
       "required": ["offset", "length", "text"],
       "properties": {
-        "offset": { "type": "integer", "minimum": 0, "description": "UTF-16 code-unit offset into the base document" },
-        "length": { "type": "integer", "minimum": 0, "description": "UTF-16 code units to delete at offset" },
-        "text": { "type": "string", "description": "replacement text inserted at offset" }
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTF-16 code-unit offset into the base document"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTF-16 code units to delete at offset"
+        },
+        "text": {
+          "type": "string",
+          "description": "replacement text inserted at offset"
+        }
       }
     },
     "ClientInfo": {
@@ -152,7 +181,14 @@
         "heartbeatIntervalMs": { "type": "integer", "minimum": 1 },
         "limits": { "$ref": "#/$defs/Limits" }
       },
-      "required": ["type", "userId", "role", "serverTime", "heartbeatIntervalMs", "limits"],
+      "required": [
+        "type",
+        "userId",
+        "role",
+        "serverTime",
+        "heartbeatIntervalMs",
+        "limits"
+      ],
       "unevaluatedProperties": false
     },
     "Join": {
@@ -161,7 +197,10 @@
       "properties": {
         "type": { "const": "join" },
         "sessionId": { "$ref": "#/$defs/Uuid" },
-        "resume": { "type": "array", "items": { "$ref": "#/$defs/ResumeEntry" } }
+        "resume": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResumeEntry" }
+        }
       },
       "required": ["type", "sessionId"],
       "unevaluatedProperties": false
@@ -174,11 +213,27 @@
         "sessionId": { "$ref": "#/$defs/Uuid" },
         "role": { "$ref": "#/$defs/Role" },
         "mode": { "const": "observe" },
-        "documents": { "type": "array", "items": { "$ref": "#/$defs/DocumentDescriptor" } },
-        "presence": { "type": "array", "items": { "$ref": "#/$defs/PresenceMember" } },
-        "snapshots": { "type": "array", "items": { "$ref": "#/$defs/SnapshotData" } }
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/DocumentDescriptor" }
+        },
+        "presence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PresenceMember" }
+        },
+        "snapshots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SnapshotData" }
+        }
       },
-      "required": ["type", "sessionId", "role", "mode", "documents", "presence"],
+      "required": [
+        "type",
+        "sessionId",
+        "role",
+        "mode",
+        "documents",
+        "presence"
+      ],
       "unevaluatedProperties": false
     },
     "DocChange": {
@@ -189,7 +244,12 @@
         "documentId": { "$ref": "#/$defs/Uuid" },
         "baseVersion": { "$ref": "#/$defs/Version" },
         "clientOpId": { "type": "string", "minLength": 1, "maxLength": 128 },
-        "edits": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/$defs/Edit" } }
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/Edit" }
+        }
       },
       "required": ["type", "documentId", "baseVersion", "clientOpId", "edits"],
       "unevaluatedProperties": false
@@ -215,11 +275,24 @@
         "documentId": { "$ref": "#/$defs/Uuid" },
         "version": { "$ref": "#/$defs/Version" },
         "baseVersion": { "$ref": "#/$defs/Version" },
-        "edits": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/$defs/Edit" } },
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/Edit" }
+        },
         "originOpId": { "type": "string", "minLength": 1, "maxLength": 128 },
         "authorUserId": { "$ref": "#/$defs/Uuid" }
       },
-      "required": ["type", "documentId", "version", "baseVersion", "edits", "originOpId", "authorUserId"],
+      "required": [
+        "type",
+        "documentId",
+        "version",
+        "baseVersion",
+        "edits",
+        "originOpId",
+        "authorUserId"
+      ],
       "unevaluatedProperties": false
     },
     "ResyncRequest": {
@@ -251,7 +324,10 @@
       "properties": {
         "type": { "const": "presence_update" },
         "sessionId": { "$ref": "#/$defs/Uuid" },
-        "members": { "type": "array", "items": { "$ref": "#/$defs/PresenceMember" } }
+        "members": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PresenceMember" }
+        }
       },
       "required": ["type", "sessionId", "members"],
       "unevaluatedProperties": false

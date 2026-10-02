@@ -67,18 +67,18 @@ rewrite.
 
 ## Scope → increment map
 
-| V1 capability | Increment |
-|---|---|
-| auth, accounts (login) | 1 (login) · 3 (account mgmt) |
-| classes | 3 ✓ |
-| live sessions, membership | 1 (create/join) · 3 (lifecycle ✓, HTTP join ✓) |
-| teacher-controlled sharing | 1 (single doc) · 2 (tree/scope) |
-| project-tree sync, file/dir create/delete/rename | 2 |
-| document content sync, versioning, ack | 1 |
-| reconnect, resync, snapshot | 1 |
-| student workspace approval | 1 (confinement) · 3 (approval UX, planned) |
-| presence | 1 (membership) · 4 (cursors/follow) |
-| teacher follow mode | 4 |
-| session start/pause/end | 3 ✓ |
-| audit logging | 1 (join/leave) · 3 (expanded) |
-| WebSocket load testing | 1 (baseline) · 6 (1→250 with evidence) |
+| V1 capability                                    | Increment                                      |
+| ------------------------------------------------ | ---------------------------------------------- |
+| auth, accounts (login)                           | 1 (login) · 3 (account mgmt)                   |
+| classes                                          | 3 ✓                                            |
+| live sessions, membership                        | 1 (create/join) · 3 (lifecycle ✓, HTTP join ✓) |
+| teacher-controlled sharing                       | 1 (single doc) · 2 (tree/scope)                |
+| project-tree sync, file/dir create/delete/rename | 2                                              |
+| document content sync, versioning, ack           | 1                                              |
+| reconnect, resync, snapshot                      | 1                                              |
+| student workspace approval                       | 1 (confinement) · 3 (approval UX, planned)     |
+| presence                                         | 1 (membership) · 4 (cursors/follow)            |
+| teacher follow mode                              | 4                                              |
+| session start/pause/end                          | 3 ✓                                            |
+| audit logging                                    | 1 (join/leave) · 3 (expanded)                  |
+| WebSocket load testing                           | 1 (baseline) · 6 (1→250 with evidence)         |

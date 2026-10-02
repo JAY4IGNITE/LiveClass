@@ -11,12 +11,17 @@ export function activate(context: vscode.ExtensionContext): void {
     .getConfiguration("liveclass")
     .get<string>("serverUrl", "http://127.0.0.1:8000");
   const status = new StatusBar();
-  const controller = new LiveClassController(new ApiClient(serverUrl), status, context.secrets);
+  const controller = new LiveClassController(
+    new ApiClient(serverUrl),
+    status,
+    context.secrets,
+  );
 
   const sidebar = new LiveClassTreeDataProvider(controller);
   vscode.window.registerTreeDataProvider("liveclass.actions", sidebar);
 
-  const reg = (id: string, fn: () => unknown) => vscode.commands.registerCommand(id, fn);
+  const reg = (id: string, fn: () => unknown) =>
+    vscode.commands.registerCommand(id, fn);
 
   context.subscriptions.push(
     status,

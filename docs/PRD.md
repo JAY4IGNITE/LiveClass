@@ -13,11 +13,11 @@ central real-time backend. It is **not** a browser IDE.
 
 ## 2. Personas
 
-| Persona | Needs |
-|---|---|
-| **Instructor** (teacher) | Share a project live, edit authoritatively, control the session |
-| **Student** | Mirror the teacher's project read-only, reconnect without losing sync |
-| **Admin** *[planned: inc 3]* | Manage classes and accounts |
+| Persona                      | Needs                                                                 |
+| ---------------------------- | --------------------------------------------------------------------- |
+| **Instructor** (teacher)     | Share a project live, edit authoritatively, control the session       |
+| **Student**                  | Mirror the teacher's project read-only, reconnect without losing sync |
+| **Admin** _[planned: inc 3]_ | Manage classes and accounts                                           |
 
 ## 3. Problem & goals
 
