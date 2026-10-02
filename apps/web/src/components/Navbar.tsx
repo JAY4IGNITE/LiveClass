@@ -12,8 +12,8 @@ export function Navbar() {
       animate={{ opacity: 1, y: 0 }}
       className="fixed top-0 inset-x-0 z-50 p-4 pointer-events-none"
     >
-      <div className="max-w-6xl mx-auto flex items-center justify-between glass-dark px-6 py-4 rounded-2xl border border-white/5 shadow-2xl pointer-events-auto">
-        <Link to="/" className="flex items-center gap-2 group">
+      <div className="max-w-6xl mx-auto flex items-center justify-between bg-slate-950/40 backdrop-blur-xl px-6 py-4 rounded-full border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] pointer-events-auto">
+        <Link to="/" className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
             <Code2 className="w-4 h-4 text-white" />
           </div>

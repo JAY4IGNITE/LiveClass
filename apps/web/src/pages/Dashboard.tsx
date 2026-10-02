@@ -45,12 +45,12 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans selection:bg-blue-500/30 pt-32">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans selection:bg-blue-500/30 pt-32 bg-grid relative overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-6xl"
+        className="w-full max-w-6xl relative z-10"
       >
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
