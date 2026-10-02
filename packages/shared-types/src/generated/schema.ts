@@ -49,6 +49,18 @@ export const messageSchema = {
     },
     {
       "$ref": "#/$defs/Checkpoint"
+    },
+    {
+      "$ref": "#/$defs/FsEvent"
+    },
+    {
+      "$ref": "#/$defs/TreeUpdate"
+    },
+    {
+      "$ref": "#/$defs/TreeSnapshot"
+    },
+    {
+      "$ref": "#/$defs/CursorUpdate"
     }
   ],
   "$defs": {
@@ -252,6 +264,41 @@ export const messageSchema = {
         },
         "lastVersion": {
           "$ref": "#/$defs/Version"
+        }
+      }
+    },
+    "FsOp": {
+      "type": "string",
+      "enum": [
+        "create",
+        "delete",
+        "rename"
+      ]
+    },
+    "FsKind": {
+      "type": "string",
+      "enum": [
+        "file",
+        "dir"
+      ]
+    },
+    "TreeEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/FsKind"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
         }
       }
     },
@@ -757,6 +804,147 @@ export const messageSchema = {
         "documentId",
         "version",
         "content"
+      ],
+      "unevaluatedProperties": false
+    },
+    "FsEvent": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "fs_event"
+        },
+        "op": {
+          "$ref": "#/$defs/FsOp"
+        },
+        "kind": {
+          "$ref": "#/$defs/FsKind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "newPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "treeBaseVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        }
+      },
+      "required": [
+        "type",
+        "op",
+        "kind",
+        "path",
+        "treeBaseVersion"
+      ],
+      "unevaluatedProperties": false
+    },
+    "TreeUpdate": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "tree_update"
+        },
+        "op": {
+          "$ref": "#/$defs/FsOp"
+        },
+        "kind": {
+          "$ref": "#/$defs/FsKind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "newPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "treeVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        }
+      },
+      "required": [
+        "type",
+        "op",
+        "kind",
+        "path",
+        "treeVersion"
+      ],
+      "unevaluatedProperties": false
+    },
+    "TreeSnapshot": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "tree_snapshot"
+        },
+        "treeVersion": {
+          "$ref": "#/$defs/Version"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeEntry"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "treeVersion",
+        "entries"
+      ],
+      "unevaluatedProperties": false
+    },
+    "CursorUpdate": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Envelope"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "cursor_update"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "type",
+        "documentId",
+        "offset",
+        "length"
       ],
       "unevaluatedProperties": false
     }

@@ -4,12 +4,17 @@ import { ApiClient } from "./apiClient";
 import { LiveClassController } from "./controller";
 import { StatusBar } from "./statusBar";
 
+import { LiveClassTreeDataProvider } from "./sidebar";
+
 export function activate(context: vscode.ExtensionContext): void {
   const serverUrl = vscode.workspace
     .getConfiguration("liveclass")
     .get<string>("serverUrl", "http://127.0.0.1:8000");
   const status = new StatusBar();
-  const controller = new LiveClassController(new ApiClient(serverUrl), status);
+  const controller = new LiveClassController(new ApiClient(serverUrl), status, context.secrets);
+
+  const sidebar = new LiveClassTreeDataProvider(controller);
+  vscode.window.registerTreeDataProvider("liveclass.actions", sidebar);
 
   const reg = (id: string, fn: () => unknown) => vscode.commands.registerCommand(id, fn);
 
@@ -18,6 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
     { dispose: () => controller.dispose() },
     // Shared
     reg("liveclass.login", () => controller.login()),
+    reg("liveclass.logout", () => controller.logout()),
     // Teacher
     reg("liveclass.createClass", () => controller.createClass()),
     reg("liveclass.createSession", () => controller.createSession()),
@@ -28,6 +34,7 @@ export function activate(context: vscode.ExtensionContext): void {
     reg("liveclass.pauseSync", () => controller.pauseSync()),
     reg("liveclass.resumeSync", () => controller.resumeSync()),
     reg("liveclass.endSession", () => controller.endSession()),
+    reg("liveclass.copySessionId", () => controller.copySessionId()),
     // Student
     reg("liveclass.chooseWorkspace", () => controller.chooseWorkspace()),
     reg("liveclass.approveWorkspace", () => controller.approveWorkspace()),
@@ -35,6 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
     reg("liveclass.followTeacher", () => controller.followTeacher()),
     reg("liveclass.stopFollowing", () => controller.stopFollowing()),
     reg("liveclass.leaveSession", () => controller.leaveSession()),
+    reg("liveclass.exportWorkspace", () => controller.exportWorkspace()),
   );
 }
 

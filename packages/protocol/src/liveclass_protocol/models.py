@@ -76,6 +76,15 @@ class ResumeEntry(StrictBase):
     lastVersion: Annotated[int, Field(ge=0)]
 
 
+class TreeEntry(StrictBase):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    path: Annotated[str, Field(min_length=1)]
+    kind: Literal['file', 'dir']
+    documentId: UUID | None = None
+
+
 class Envelope(StrictBase):
     """
     Fields common to every message. sessionId/role are never trusted for authorization — the server resolves them.
@@ -257,6 +266,51 @@ class Checkpoint(Envelope):
     content: str
 
 
+class FsEvent(Envelope):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    type: Literal['fs_event']
+    op: Literal['create', 'delete', 'rename']
+    kind: Literal['file', 'dir']
+    path: Annotated[str, Field(min_length=1)]
+    newPath: Annotated[str | None, Field(min_length=1)] = None
+    treeBaseVersion: Annotated[int, Field(ge=0)]
+    documentId: UUID | None = None
+
+
+class TreeUpdate(Envelope):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    type: Literal['tree_update']
+    op: Literal['create', 'delete', 'rename']
+    kind: Literal['file', 'dir']
+    path: Annotated[str, Field(min_length=1)]
+    newPath: Annotated[str | None, Field(min_length=1)] = None
+    treeVersion: Annotated[int, Field(ge=0)]
+    documentId: UUID | None = None
+
+
+class TreeSnapshot(Envelope):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    type: Literal['tree_snapshot']
+    treeVersion: Annotated[int, Field(ge=0)]
+    entries: list[TreeEntry]
+
+
+class CursorUpdate(Envelope):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    type: Literal['cursor_update']
+    documentId: UUID
+    offset: Annotated[int, Field(ge=0)]
+    length: Annotated[int, Field(ge=0)]
+
+
 class Message(
     RootModel[
         Connect
@@ -274,6 +328,10 @@ class Message(
         | SessionClosed
         | Error
         | Checkpoint
+        | FsEvent
+        | TreeUpdate
+        | TreeSnapshot
+        | CursorUpdate
     ]
 ):
     root: Annotated[
@@ -291,7 +349,11 @@ class Message(
         | Pong
         | SessionClosed
         | Error
-        | Checkpoint,
+        | Checkpoint
+        | FsEvent
+        | TreeUpdate
+        | TreeSnapshot
+        | CursorUpdate,
         Field(
             description='LiveClass IDE wire protocol — single source of truth. Pydantic and TS types are generated from this file; message shapes are never hand-written elsewhere.',
             title='Message',

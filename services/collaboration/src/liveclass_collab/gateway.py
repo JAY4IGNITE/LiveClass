@@ -1,12 +1,3 @@
-"""WebSocket collaboration gateway.
-
-Each connection runs the connect -> join -> live protocol. A single writer task
-drains an outbound queue (so the socket is never written concurrently); a
-Redis pub/sub task fans session events into that same queue. Inbound messages
-are schema-validated, rate-limited, authorized server-side, and (for edits)
-sequenced atomically via Redis Lua.
-"""
-
 import asyncio
 import contextlib
 import json
@@ -23,7 +14,7 @@ from liveclass_api.core.db import get_sessionmaker
 from liveclass_api.core.logging import get_logger
 from liveclass_api.core.models import AuditEvent, Document
 from liveclass_api.core.security import TokenError, decode_access_token
-from liveclass_collab import presence, sequencer, snapshots
+from liveclass_collab import broadcaster, presence, sequencer, snapshots
 from liveclass_collab.ratelimit import TokenBucket
 from liveclass_collab.redis_client import get_redis
 from liveclass_protocol import PROTOCOL_VERSION, parse_message
@@ -65,7 +56,6 @@ class Connection:
         self.is_teacher = False
         self.conn_id = str(uuid.uuid4())
         self._tasks: list[asyncio.Task] = []
-        self._pubsub = None
         self._bucket = TokenBucket(settings.ws_msgs_per_sec, settings.ws_msgs_per_sec)
 
     async def send(self, message: dict) -> None:
@@ -84,14 +74,6 @@ class Connection:
                 await self.ws.send_text(data)
         except (WebSocketDisconnect, RuntimeError):
             pass
-    async def _pubsub_listen(self) -> None:
-        try:
-            async for message in self._pubsub.listen():
-                if message["type"] == "message":
-                    await self.outbound.put(message["data"])
-        finally:
-            with contextlib.suppress(Exception):
-                await self._pubsub.aclose()
 
     async def run(self) -> None:
         self._tasks.append(asyncio.create_task(self._writer()))
@@ -170,9 +152,7 @@ class Connection:
         await presence.join(self.redis, self.session_id, str(self.user.id), self.role)
         # Subscribe before sending welcome so the client cannot miss a broadcast
         # published between its join and its subscription becoming active.
-        self._pubsub = self.redis.pubsub()
-        await self._pubsub.subscribe(f"session:{self.session_id}:events")
-        self._tasks.append(asyncio.create_task(self._pubsub_listen()))
+        await broadcaster.manager.subscribe(self.session_id, self.outbound)
         documents = [
             {
                 "documentId": str(d.id),
@@ -230,6 +210,11 @@ class Connection:
             await self._handle_resync(msg)
         elif msg.type == "checkpoint":
             await self._handle_checkpoint(msg)
+        elif msg.type == "fs_event":
+            await self._handle_fs_event(msg)
+        elif msg.type == "cursor_update":
+            if self.is_teacher:
+                await self._publish(msg.model_dump())
         elif msg.type == "ping":
             await self.send(env("pong", nonce=msg.nonce))
         elif msg.type == "pong":
@@ -298,6 +283,82 @@ class Connection:
                 "INVALID_VERSION",
                 "baseVersion ahead of server",
                 documentId=document_id,
+                relatedMsgId=str(msg.msgId),
+                currentVersion=value,
+            )
+
+    async def _handle_fs_event(self, msg) -> None:
+        if not self.is_teacher:
+            await self._send_error(
+                "FORBIDDEN",
+                "only the owning instructor may edit the tree",
+                relatedMsgId=str(msg.msgId),
+            )
+            return
+
+        doc_id_val = getattr(msg, "documentId", None)
+        doc_id = str(doc_id_val) if doc_id_val else None
+
+        if doc_id:
+            async with get_sessionmaker()() as session:
+                class_session = await authz.get_session_row(session, uuid.UUID(self.session_id))
+                if class_session:
+                    try:
+                        if msg.op == "create" and msg.kind == "file":
+                            new_doc = Document(id=uuid.UUID(doc_id), session_id=class_session.id, relative_path=msg.path)
+                            session.add(new_doc)
+                            await session.commit()
+                            self.document_ids.add(doc_id)
+                        elif msg.op == "delete" and msg.kind == "file":
+                            doc = await session.get(Document, uuid.UUID(doc_id))
+                            if doc and doc.session_id == class_session.id:
+                                await session.delete(doc)
+                                await session.commit()
+                                self.document_ids.discard(doc_id)
+                        elif msg.op == "rename" and msg.kind == "file" and getattr(msg, "newPath", None):
+                            doc = await session.get(Document, uuid.UUID(doc_id))
+                            if doc and doc.session_id == class_session.id:
+                                doc.relative_path = msg.newPath
+                                await session.commit()
+                    except Exception:
+                        await session.rollback()
+
+        status, value = await sequencer.sequence(
+            self.redis,
+            document_id=self.session_id,
+            base_version=msg.treeBaseVersion,
+            client_op_id=str(msg.msgId),
+            edits=[{"op": msg.op, "kind": msg.kind, "path": msg.path, "newPath": getattr(msg, "newPath", None)}],
+            author_id=str(self.user.id),
+            ts=_now_ms(),
+            buffer_window=self.settings.op_buffer_window,
+            dedup_ttl=_DEDUP_TTL_SECONDS,
+            namespace="tree",
+        )
+        if status == "OK":
+            update_env = env(
+                "tree_update",
+                op=msg.op,
+                kind=msg.kind,
+                path=msg.path,
+                treeVersion=value,
+            )
+            if getattr(msg, "newPath", None) is not None:
+                update_env["newPath"] = msg.newPath
+            if doc_id is not None:
+                update_env["documentId"] = doc_id
+            await self._publish(update_env)
+        elif status == "STALE":
+            await self._send_error(
+                "STALE_VERSION",
+                "treeBaseVersion behind server",
+                relatedMsgId=str(msg.msgId),
+                currentVersion=value,
+            )
+        elif status == "INVALID":
+            await self._send_error(
+                "INVALID_VERSION",
+                "treeBaseVersion ahead of server",
                 relatedMsgId=str(msg.msgId),
                 currentVersion=value,
             )
@@ -382,6 +443,7 @@ class Connection:
                 break
         if self.session_id and self.user:
             with contextlib.suppress(Exception):
+                await broadcaster.manager.unsubscribe(self.session_id, self.outbound)
                 await presence.leave(self.redis, self.session_id, str(self.user.id))
                 await self._publish(
                     env(

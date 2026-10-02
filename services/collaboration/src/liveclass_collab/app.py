@@ -10,9 +10,20 @@ from liveclass_api.http import auth, classes, sessions
 from liveclass_collab.gateway import router as ws_router
 
 
+from fastapi.middleware.cors import CORSMiddleware
+
 def create_app() -> FastAPI:
     configure_logging(json_output=False)
     app = FastAPI(title="LiveClass", version="0.0.0")
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allows all origins
+        allow_credentials=True,
+        allow_methods=["*"],  # Allows all methods (including OPTIONS)
+        allow_headers=["*"],
+    )
+
     app.include_router(auth.router)
     app.include_router(classes.router)
     app.include_router(sessions.router)

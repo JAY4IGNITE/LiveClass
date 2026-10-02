@@ -30,12 +30,36 @@ export class LiveClassController {
   private pendingWorkspace: vscode.Uri | null = null;
   private following = false;
   private members: Member[] = [];
+  private readonly _onDidChange = new vscode.EventEmitter<void>();
+  public readonly onDidChange = this._onDidChange.event;
+
+  public get currentRole(): Role | null { return this.role; }
+  public get activeSessionId(): string | null { return this.sessionId; }
+  public get isSharing(): boolean { return this.share !== null; }
+  public get isObserving(): boolean { return this.mirror !== null; }
+  public get isFollowing(): boolean { return this.following; }
+
   private projectDoc: vscode.TextDocument | null = null;
 
   constructor(
     private readonly api: ApiClient,
     private readonly status: StatusBar,
-  ) {}
+    private readonly secrets: vscode.SecretStorage,
+  ) {
+    this.restoreSession();
+  }
+
+  private async restoreSession(): Promise<void> {
+    const savedToken = await this.secrets.get("liveclass.token");
+    const savedRole = await this.secrets.get("liveclass.role");
+    if (savedToken && savedRole) {
+      this.token = savedToken;
+      this.role = savedRole as Role;
+      this.status.set("signed in", this.role);
+      this._onDidChange.fire();
+      // Optional: don't annoy with a popup on silent restore
+    }
+  }
 
   async login(): Promise<void> {
     const username = await vscode.window.showInputBox({ prompt: "LiveClass username" });
@@ -49,11 +73,24 @@ export class LiveClassController {
       const result = await this.api.login(username, password);
       this.token = result.access_token;
       this.role = result.role;
+      await this.secrets.store("liveclass.token", this.token);
+      await this.secrets.store("liveclass.role", this.role);
       this.status.set("signed in", result.role);
+      this._onDidChange.fire();
       void vscode.window.showInformationMessage(`LiveClass: signed in as ${result.role}`);
     } catch (err) {
       this.fail("Login failed", err);
     }
+  }
+
+  async logout(): Promise<void> {
+    this.token = null;
+    this.role = null;
+    await this.secrets.delete("liveclass.token");
+    await this.secrets.delete("liveclass.role");
+    this.status.set("disconnected");
+    this._onDidChange.fire();
+    void vscode.window.showInformationMessage("LiveClass: signed out");
   }
   // ---- teacher ----
 
@@ -87,6 +124,7 @@ export class LiveClassController {
       const created = await this.api.createSession(classId);
       this.sessionId = created.id;
       this.status.set("session created", created.id.slice(0, 8));
+      this._onDidChange.fire();
       void vscode.window.showInformationMessage(`Session created: ${created.id}`);
     } catch (err) {
       this.fail("Create session failed", err);
@@ -116,16 +154,19 @@ export class LiveClassController {
       return;
     }
     this.projectDoc = doc;
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(doc.uri);
+
     this.connect((engine) => {
       this.share = new TeacherShare(engine);
       engine.on("welcome", (documents) => {
-        const first = documents[0];
+        if (workspaceFolder) {
+          this.share?.shareWorkspace(workspaceFolder.uri);
+        }
+        
+        // Ensure the initially selected file is shared if it exists in the server state
+        const first = documents.find(d => d.documentId) ?? documents[0];
         if (first) {
-          this.share?.share(first.documentId, doc);
-        } else {
-          void vscode.window.showWarningMessage(
-            "Session has no shared document yet (multi-file sharing lands in a later increment)",
-          );
+          this.share?.shareSingleDocument(first.documentId, doc);
         }
       });
       engine.on("presence", (members) => {
@@ -133,12 +174,14 @@ export class LiveClassController {
       });
     });
     this.status.set("sharing");
+    this._onDidChange.fire();
   }
 
   stopSharing(): void {
     this.share?.dispose();
     this.share = null;
     this.status.set("connected", "not sharing");
+    this._onDidChange.fire();
     void vscode.window.showInformationMessage("Stopped sharing");
   }
 
@@ -187,6 +230,13 @@ export class LiveClassController {
     this.disconnect();
     this.status.set("ended");
     void vscode.window.showInformationMessage("Session ended");
+  }
+
+  copySessionId(): void {
+    if (this.sessionId) {
+      void vscode.env.clipboard.writeText(this.sessionId);
+      void vscode.window.showInformationMessage(`Copied session ID: ${this.sessionId}`);
+    }
   }
   // ---- student ----
 
@@ -246,31 +296,63 @@ export class LiveClassController {
       engine.on("docChanged", (e) => {
         if (this.following) this.reveal(e.documentId);
       });
+      engine.on("cursorUpdate", (e) => {
+        if (this.following) {
+          this.mirror?.showTeacherCursor(e.documentId, e.offset, e.length);
+        }
+      });
       engine.on("sessionClosed", (reason) =>
         void vscode.window.showWarningMessage(`Session ${reason}`),
       );
     });
     this.status.set("observing");
+    this._onDidChange.fire();
   }
 
   followTeacher(): void {
     this.following = true;
     this.status.set("observing", "following");
+    this._onDidChange.fire();
   }
 
   stopFollowing(): void {
     this.following = false;
     this.status.set("observing");
+    this._onDidChange.fire();
   }
 
   leaveSession(): void {
     this.disconnect();
     this.status.set("left");
+    this._onDidChange.fire();
     void vscode.window.showInformationMessage("Left session");
   }
 
   dispose(): void {
     this.disconnect();
+  }
+
+  async exportWorkspace(): Promise<void> {
+    if (!this.pendingWorkspace) {
+      void vscode.window.showErrorMessage("You must approve a workspace first");
+      return;
+    }
+    const saveUri = await vscode.window.showSaveDialog({
+      filters: { "ZIP files": ["zip"] },
+      defaultUri: vscode.Uri.file(this.pendingWorkspace.fsPath + "/LiveClass_Export.zip"),
+      title: "Export LiveClass Project"
+    });
+    if (!saveUri) return;
+
+    try {
+      const AdmZip = require("adm-zip");
+      const zip = new AdmZip();
+      zip.addLocalFolder(this.pendingWorkspace.fsPath);
+      zip.writeZip(saveUri.fsPath);
+      void vscode.window.showInformationMessage(`Successfully exported to ${saveUri.fsPath}`);
+    } catch (err) {
+      this.fail("Export failed", err);
+    }
   }
 
   // ---- internals ----

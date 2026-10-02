@@ -30,11 +30,11 @@ return {'OK', tostring(newv)}
 """
 
 
-def _keys(document_id: str) -> list[str]:
+def _keys(document_id: str, namespace: str = "doc") -> list[str]:
     return [
-        f"doc:{document_id}:version",
-        f"doc:{document_id}:ops",
-        f"doc:{document_id}:dedup",
+        f"{namespace}:{document_id}:version",
+        f"{namespace}:{document_id}:ops",
+        f"{namespace}:{document_id}:dedup",
     ]
 
 
@@ -49,9 +49,10 @@ async def sequence(
     ts: int,
     buffer_window: int,
     dedup_ttl: int,
+    namespace: str = "doc",
 ) -> tuple[str, int]:
     """Returns ``(status, version)`` where status is OK | DUP | STALE | INVALID."""
-    keys = _keys(document_id)
+    keys = _keys(document_id, namespace)
     result = await redis.eval(
         _SEQUENCE_LUA,
         3,
@@ -69,17 +70,17 @@ async def sequence(
     return str(result[0]), int(result[1])
 
 
-async def current_version(redis: Redis, document_id: str) -> int:
-    value = await redis.get(f"doc:{document_id}:version")
+async def current_version(redis: Redis, document_id: str, namespace: str = "doc") -> int:
+    value = await redis.get(f"{namespace}:{document_id}:version")
     return int(value) if value is not None else 0
 
 
 async def replay(
-    redis: Redis, document_id: str, from_version: int
+    redis: Redis, document_id: str, from_version: int, namespace: str = "doc"
 ) -> tuple[list[dict], int | None]:
     """Return ops with version > from_version, plus the lowest buffered version
     (``None`` if the buffer is empty) so callers can detect a trimmed gap."""
-    entries = await redis.xrange(f"doc:{document_id}:ops")
+    entries = await redis.xrange(f"{namespace}:{document_id}:ops")
     ops: list[dict] = []
     min_version: int | None = None
     for _entry_id, fields in entries:

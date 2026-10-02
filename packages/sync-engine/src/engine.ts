@@ -44,6 +44,8 @@ export class SyncEngine {
   private role: Role | null = null;
   private userId: string | null = null;
   private intentionalClose = false;
+  private treeLastApplied = 0;
+  private treePredicted = 0;
   private readonly docs = new Map<string, DocState>();
   private readonly listeners = new Map<keyof SyncEngineEvents, Set<Listener>>();
 
@@ -114,6 +116,24 @@ export class SyncEngine {
     return clientOpId;
   }
 
+  /** Instructor only: optimistically sequence a filesystem event. */
+  localFsEvent(op: "create" | "delete" | "rename", kind: "file" | "dir", path: string, newPath?: string, documentId?: string): void {
+    if (this.role !== "instructor") {
+      throw new Error("Only an instructor may edit the tree");
+    }
+    const treeBaseVersion = this.treePredicted;
+    this.treePredicted = treeBaseVersion + 1;
+    this.send({
+      type: "fs_event",
+      op,
+      kind,
+      path,
+      ...(newPath ? { newPath } : {}),
+      ...(documentId ? { documentId } : {}),
+      treeBaseVersion,
+    });
+  }
+
   /**
    * Instructor only: upload a full-document checkpoint. No-op (returns false)
    * while edits are unacked, so the checkpoint version always matches content.
@@ -132,6 +152,17 @@ export class SyncEngine {
     });
     return true;
   }
+  /** Instructor only: send cursor position updates on the fast path UI channel */
+  localCursorUpdate(documentId: string, offset: number, length: number): void {
+    if (this.role !== "instructor") return;
+    this.send({
+      type: "cursor_update",
+      documentId,
+      offset,
+      length,
+    });
+  }
+
   // ---- internals ----
 
   private ensureDoc(documentId: string): DocState {
@@ -204,6 +235,14 @@ export class SyncEngine {
       case "doc_update":
         this.onDocUpdate(msg);
         break;
+      case "tree_update":
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.onTreeUpdate(msg as any);
+        break;
+      case "cursor_update":
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.emit("cursorUpdate", msg as any);
+        break;
       case "ack":
         this.onAck(msg.documentId, msg.clientOpId, msg.version);
         break;
@@ -261,6 +300,13 @@ export class SyncEngine {
     if (doc.predicted < version) doc.predicted = version;
     doc.pending.clear();
     this.emit("docChanged", { documentId, content, version });
+  }
+
+  private onTreeUpdate(msg: { op: "create" | "delete" | "rename"; kind: "file" | "dir"; path: string; newPath?: string; treeVersion: number; documentId?: string }): void {
+    if (msg.treeVersion <= this.treeLastApplied) return;
+    this.treeLastApplied = msg.treeVersion;
+    if (this.treePredicted < this.treeLastApplied) this.treePredicted = this.treeLastApplied;
+    this.emit("treeUpdate", msg);
   }
 
   private onDocUpdate(msg: {

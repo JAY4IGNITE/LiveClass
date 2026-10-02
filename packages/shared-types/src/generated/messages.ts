@@ -18,7 +18,11 @@ export type Message =
   | Pong
   | SessionClosed
   | Error
-  | Checkpoint;
+  | Checkpoint
+  | FsEvent
+  | TreeUpdate
+  | TreeSnapshot
+  | CursorUpdate;
 export type Connect = Envelope & {
   type: "connect";
   token: string;
@@ -142,6 +146,37 @@ export type Checkpoint = Envelope & {
   version: Version;
   content: string;
 };
+export type FsEvent = Envelope & {
+  type: "fs_event";
+  op: FsOp;
+  kind: FsKind;
+  path: string;
+  newPath?: string;
+  treeBaseVersion: Version;
+  documentId?: Uuid;
+};
+export type FsOp = "create" | "delete" | "rename";
+export type FsKind = "file" | "dir";
+export type TreeUpdate = Envelope & {
+  type: "tree_update";
+  op: FsOp;
+  kind: FsKind;
+  path: string;
+  newPath?: string;
+  treeVersion: Version;
+  documentId?: Uuid;
+};
+export type TreeSnapshot = Envelope & {
+  type: "tree_snapshot";
+  treeVersion: Version;
+  entries: TreeEntry[];
+};
+export type CursorUpdate = Envelope & {
+  type: "cursor_update";
+  documentId: Uuid;
+  offset: number;
+  length: number;
+};
 
 /**
  * Fields common to every message. sessionId/role are never trusted for authorization — the server resolves them.
@@ -195,4 +230,9 @@ export interface Edit {
    * replacement text inserted at offset
    */
   text: string;
+}
+export interface TreeEntry {
+  path: string;
+  kind: FsKind;
+  documentId?: Uuid;
 }

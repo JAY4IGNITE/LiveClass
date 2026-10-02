@@ -56,5 +56,7 @@ export interface SyncEngineEvents {
   presence: (members: PresenceMember[]) => void;
   sessionClosed: (reason: string) => void;
   error: (e: { code: string; message: string }) => void;
+  treeUpdate: (e: { op: "create" | "delete" | "rename"; kind: "file" | "dir"; path: string; newPath?: string; treeVersion: number; documentId?: string }) => void;
+  cursorUpdate: (e: { documentId: string; offset: number; length: number }) => void;
   closed: () => void;
 }
