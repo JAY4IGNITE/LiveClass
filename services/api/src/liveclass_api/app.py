@@ -6,6 +6,7 @@ its own.
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from liveclass_api.core.logging import configure_logging
 from liveclass_api.http import auth, classes, sessions
@@ -14,6 +15,14 @@ from liveclass_api.http import auth, classes, sessions
 def create_app() -> FastAPI:
     configure_logging(json_output=False)
     app = FastAPI(title="LiveClass API", version="0.0.0")
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(auth.router)
     app.include_router(classes.router)
     app.include_router(sessions.router)
