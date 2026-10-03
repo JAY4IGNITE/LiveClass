@@ -31,7 +31,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_classes_instructor_id'), 'classes', ['instructor_id'], unique=False)
     op.add_column('sessions', sa.Column('class_id', sa.Uuid(), nullable=True))
     op.create_index(op.f('ix_sessions_class_id'), 'sessions', ['class_id'], unique=False)
-    op.create_foreign_key(None, 'sessions', 'classes', ['class_id'], ['id'])
+    op.create_foreign_key('fk_sessions_classes', 'sessions', 'classes', ['class_id'], ['id'])
     # ### end Alembic commands ###
 
 
@@ -40,7 +40,7 @@ def downgrade() -> None:
     # WARNING: constraint name is None; this directive will fail as
     # rendered.  Add a name, or use a naming convention; see
     # https://alembic.sqlalchemy.org/en/latest/naming.html
-    op.drop_constraint(None, 'sessions', type_='foreignkey')
+    op.drop_constraint('fk_sessions_classes', 'sessions', type_='foreignkey')
     op.drop_index(op.f('ix_sessions_class_id'), table_name='sessions')
     op.drop_column('sessions', 'class_id')
     op.drop_index(op.f('ix_classes_instructor_id'), table_name='classes')

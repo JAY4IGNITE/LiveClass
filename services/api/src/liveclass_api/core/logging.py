@@ -2,7 +2,7 @@
 
 import logging
 
-import structlog
+import structlog  # type: ignore
 
 
 def configure_logging(level: int = logging.INFO, *, json_output: bool = True) -> None:

@@ -12,7 +12,7 @@ from liveclass_api.core import authz
 from liveclass_api.core.config import Settings, get_settings
 from liveclass_api.core.db import get_sessionmaker
 from liveclass_api.core.logging import get_logger
-from liveclass_api.core.models import AuditEvent, Document
+from liveclass_api.core.models import AuditEvent, Document, User
 from liveclass_api.core.security import TokenError, decode_access_token
 from liveclass_collab import broadcaster, presence, sequencer, snapshots
 from liveclass_collab.ratelimit import TokenBucket
@@ -49,7 +49,7 @@ class Connection:
         self.settings = settings
         self.redis = get_redis()
         self.outbound: asyncio.Queue[str] = asyncio.Queue()
-        self.user = None
+        self.user: User | None = None
         self.role: str | None = None
         self.session_id: str | None = None
         self.document_ids: set[str] = set()
@@ -123,6 +123,7 @@ class Connection:
         )
 
     async def _join(self) -> None:
+        assert self.user is not None
         raw = await self.ws.receive_text()
         try:
             msg = parse_message(raw)
@@ -154,6 +155,7 @@ class Connection:
                 .all()
             )
         self.document_ids = {str(d.id) for d in docs}
+        assert self.role is not None
         await presence.join(self.redis, self.session_id, str(self.user.id), self.role)
         # Subscribe before sending welcome so the client cannot miss a broadcast
         # published between its join and its subscription becoming active.
@@ -228,6 +230,7 @@ class Connection:
             await self._send_error("INVALID_MESSAGE", f"unexpected message: {msg.type}")
 
     async def _handle_doc_change(self, msg) -> None:
+        assert self.user is not None
         if not self.is_teacher:
             await self._send_error(
                 "FORBIDDEN",
@@ -294,6 +297,8 @@ class Connection:
             )
 
     async def _handle_fs_event(self, msg) -> None:
+        assert self.user is not None
+        assert self.session_id is not None
         if not self.is_teacher:
             await self._send_error(
                 "FORBIDDEN",
@@ -417,6 +422,7 @@ class Connection:
             )
 
     async def _handle_checkpoint(self, msg) -> None:
+        assert self.user is not None
         if not self.is_teacher:
             await self._send_error(
                 "FORBIDDEN",

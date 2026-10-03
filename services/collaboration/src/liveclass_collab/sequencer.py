@@ -7,6 +7,7 @@ The server never interprets edit offsets — edits are stored and relayed opaque
 """
 
 import json
+import typing
 
 from redis.asyncio import Redis
 
@@ -81,9 +82,12 @@ async def replay(
     """Return ops with version > from_version, plus the lowest buffered version
     (``None`` if the buffer is empty) so callers can detect a trimmed gap."""
     entries = await redis.xrange(f"{namespace}:{document_id}:ops")
+    if not entries:
+        entries = []
     ops: list[dict] = []
     min_version: int | None = None
-    for _entry_id, fields in entries:
+    for _entry_id, _fields in entries:
+        fields = typing.cast(dict[str, typing.Any], _fields)
         version = int(fields["version"])
         min_version = version if min_version is None else min(min_version, version)
         if version > from_version:

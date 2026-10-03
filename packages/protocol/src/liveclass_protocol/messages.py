@@ -16,33 +16,39 @@ from . import models as m
 #: Wire protocol version. Must match ``ProtocolVersion`` const in the schema.
 PROTOCOL_VERSION = "1.0"
 
+AnyMessageUnion = (
+    m.Connect
+    | m.ConnectAck
+    | m.Join
+    | m.Welcome
+    | m.DocChange
+    | m.Ack
+    | m.DocUpdate
+    | m.ResyncRequest
+    | m.Snapshot
+    | m.PresenceUpdate
+    | m.Ping
+    | m.Pong
+    | m.SessionClosed
+    | m.Error
+    | m.Checkpoint
+    | m.FsEvent
+    | m.TreeUpdate
+    | m.TreeSnapshot
+    | m.CursorUpdate
+)
+
 #: Discriminated union of every message, keyed on the ``type`` field. Validation
 #: is O(1) in the number of message types and yields precise errors.
 AnyMessage = Annotated[
-    (
-        m.Connect
-        | m.ConnectAck
-        | m.Join
-        | m.Welcome
-        | m.DocChange
-        | m.Ack
-        | m.DocUpdate
-        | m.ResyncRequest
-        | m.Snapshot
-        | m.PresenceUpdate
-        | m.Ping
-        | m.Pong
-        | m.SessionClosed
-        | m.Error
-        | m.Checkpoint
-    ),
+    AnyMessageUnion,
     Field(discriminator="type"),
 ]
 
 _adapter: TypeAdapter = TypeAdapter(AnyMessage)
 
 
-def parse_message(data: bytes | str | dict) -> m.Envelope:
+def parse_message(data: bytes | str | dict) -> AnyMessageUnion:
     """Validate and parse an inbound message.
 
     Accepts a raw JSON ``bytes``/``str`` or an already-decoded ``dict``. Raises
