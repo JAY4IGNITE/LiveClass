@@ -3,7 +3,6 @@
 packages:
   - "packages/shared-types"
   - "packages/sync-engine"
-  - "apps/web"
   - "extensions/vscode"
   - "tests/e2e"
   - "tests/load"
